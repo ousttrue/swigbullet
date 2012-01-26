@@ -5,6 +5,7 @@ import shutil
 from setuptools import setup, Extension
 from distutils.dir_util import mkpath
 
+BULLET_DIR='../../bullet-2.79'
 PY_MODULE_DIR='build/lib.win32-2.7/bullet'
 
 # copy to current
@@ -18,7 +19,7 @@ copy_if_not_exists('bullet.__init__.i')
 mkpath(PY_MODULE_DIR)
 
 include_dirs=[
-        '../..',
+        BULLET_DIR,
         ]
 
 def sub_module(name):
@@ -38,7 +39,7 @@ def sub_module(name):
                 ],
             define_macros=[
                 ],
-            library_dirs=['../../../release'],
+            library_dirs=[os.path.join(BULLET_DIR, '../release')],
             libraries=[
                 'BulletSoftBody',
                 'BulletDynamics',
@@ -48,9 +49,9 @@ def sub_module(name):
             )
 
 setup (name = 'bullet',
-        version = '0.1',
+        version = '2.79-1',
         author      = "ousttrue",
-        description = """bullet python binding""",
+        description = """python binding of bullet by swig""",
         ext_modules = [
             sub_module('__init__'),
             ],
