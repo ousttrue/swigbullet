@@ -435,86 +435,122 @@ static inline btVector3 getColor(int state, int i)
 }
 
 
+btScalar m[16];
+btMatrix3x3 rot;
+btVector3 wireColor;
+static void renderobj(int i, btCollisionObject *colObj,
+        const btVector3 &aabbMin, const btVector3 &aabbMax, int debugMode)
+{
+    btRigidBody* body=btRigidBody::upcast(colObj);
+    if(body&&body->getMotionState()) {
+        btDefaultMotionState* myMotionState = 
+            (btDefaultMotionState*)body->getMotionState();
+        myMotionState->m_graphicsWorldTrans.getOpenGLMatrix(m);
+    }
+    else {
+        colObj->getWorldTransform().getOpenGLMatrix(m);
+    }
+    wireColor=getColor(colObj->getActivationState(), i);
+    GL_ShapeDrawer::Draw(m, 
+            colObj->getCollisionShape(),
+            wireColor,
+            debugMode,
+            aabbMin, aabbMax);
+}
+static void rendershadowvolume(btCollisionObject *colObj,
+        const btVector3 &aabbMin, const btVector3 &aabbMax, 
+        const btVector3 &sundirection)
+{
+    btRigidBody* body=btRigidBody::upcast(colObj);
+    if(body&&body->getMotionState()) {
+        btDefaultMotionState* myMotionState = 
+            (btDefaultMotionState*)body->getMotionState();
+        myMotionState->m_graphicsWorldTrans.getOpenGLMatrix(m);
+        rot=myMotionState->m_graphicsWorldTrans.getBasis();
+    }
+    else {
+        colObj->getWorldTransform().getOpenGLMatrix(m);
+        rot=colObj->getWorldTransform().getBasis();
+    }
+    GL_ShapeDrawer::Shadow(m, sundirection*rot,
+            colObj->getCollisionShape(),
+            aabbMin, aabbMax);
+}
+static void rendershadowcolor(int i, btCollisionObject *colObj,
+        const btVector3 &aabbMin, const btVector3 &aabbMax)
+{
+    btRigidBody* body=btRigidBody::upcast(colObj);
+    if(body&&body->getMotionState()) {
+        btDefaultMotionState* myMotionState = 
+            (btDefaultMotionState*)body->getMotionState();
+        myMotionState->m_graphicsWorldTrans.getOpenGLMatrix(m);
+    }
+    else {
+        colObj->getWorldTransform().getOpenGLMatrix(m);
+    }
+    wireColor=getColor(colObj->getActivationState(), i);
+
+    GL_ShapeDrawer::Draw(m,
+            colObj->getCollisionShape(),
+            wireColor*btScalar(0.3), 
+            0,
+            aabbMin,aabbMax);
+}
 void DemoApplication::renderscene(int pass)
 {
     btDynamicsWorld *dynamicsWorld=m_bulletworld->getDynamicsWorld();
     if(dynamicsWorld==0){
         return;
     }
-    btScalar m[16];
-    btMatrix3x3 rot;
-    const int numObjects=dynamicsWorld->getNumCollisionObjects();
-    btVector3 wireColor;
-    for(int i=0;i<numObjects;i++)
-    {
-        btCollisionObject* colObj=dynamicsWorld->getCollisionObjectArray()[i];
-        btRigidBody* body=btRigidBody::upcast(colObj);
-        if(body&&body->getMotionState()) {
-            btDefaultMotionState* myMotionState = 
-                (btDefaultMotionState*)body->getMotionState();
-            myMotionState->m_graphicsWorldTrans.getOpenGLMatrix(m);
-            rot=myMotionState->m_graphicsWorldTrans.getBasis();
-        }
-        else {
-            colObj->getWorldTransform().getOpenGLMatrix(m);
-            rot=colObj->getWorldTransform().getBasis();
-        }
-        wireColor=getColor(colObj->getActivationState(), i);
-
-        btVector3 aabbMin,aabbMax;
-        dynamicsWorld->getBroadphase()->getBroadphaseAabb(aabbMin,aabbMax);
-
-        aabbMin-=btVector3(BT_LARGE_FLOAT,BT_LARGE_FLOAT,BT_LARGE_FLOAT);
-        aabbMax+=btVector3(BT_LARGE_FLOAT,BT_LARGE_FLOAT,BT_LARGE_FLOAT);
-        // printf("aabbMin=(%f,%f,%f)\n",aabbMin.getX(),aabbMin.getY(),aabbMin.getZ());
-        // printf("aabbMax=(%f,%f,%f)\n",aabbMax.getX(),aabbMax.getY(),aabbMax.getZ());
-        // dynamicsWorld->getDebugDrawer()->drawAabb(aabbMin,aabbMax,btVector3(1,1,1));
-        int debugMode=getDebugMode();
-        if (!(debugMode& btIDebugDraw::DBG_DrawWireframe))
+    btVector3 aabbMin,aabbMax;
+    dynamicsWorld->getBroadphase()->getBroadphaseAabb(aabbMin,aabbMax);
+    aabbMin-=btVector3(BT_LARGE_FLOAT,BT_LARGE_FLOAT,BT_LARGE_FLOAT);
+    aabbMax+=btVector3(BT_LARGE_FLOAT,BT_LARGE_FLOAT,BT_LARGE_FLOAT);
+    int debugMode=getDebugMode();
+    if (!(debugMode& btIDebugDraw::DBG_DrawWireframe)){
+        const int numObjects=dynamicsWorld->getNumCollisionObjects();
+        switch(pass)
         {
-            switch(pass)
-            {
-                case 0:
+            case 0:
+                {
+                    if(m_textureenabled){
+                        m_texture->begin();
+                    }
+                    for(int i=0;i<numObjects;i++)
                     {
-                        if(m_textureenabled){
-                            m_texture->begin();
-                        }
-                        GL_ShapeDrawer::Draw(m, 
-                                colObj->getCollisionShape(),
-                                wireColor,
-                                debugMode,
+                        renderobj(i, dynamicsWorld->getCollisionObjectArray()[i],
+                                aabbMin, aabbMax, debugMode);
+                    }
+                    if(m_textureenabled){
+                        m_texture->end();
+                    }
+                    break;
+                }
+            case 1:
+                {
+                    for(int i=0;i<numObjects;i++)
+                    {
+                        rendershadowvolume(dynamicsWorld->getCollisionObjectArray()[i],
+                                aabbMin, aabbMax, m_sundirection);
+                    }
+                    break;
+                }
+            case 2:
+                {
+                    if(m_textureenabled){
+                        m_texture->begin();
+                    }
+                    for(int i=0;i<numObjects;i++)
+                    {
+                        rendershadowcolor(i, dynamicsWorld->getCollisionObjectArray()[i],
                                 aabbMin, aabbMax);
-                        if(m_textureenabled){
-                            m_texture->end();
-                        }
-                        break;
                     }
-
-                case 1:
-                    {
-                        GL_ShapeDrawer::Shadow(m, m_sundirection*rot,
-                                colObj->getCollisionShape(),
-                                aabbMin, aabbMax);
-                        break;
+                    if(m_textureenabled){
+                        m_texture->end();
                     }
+                    break;
+                }
 
-                case 2:
-                    {
-                        if(m_textureenabled){
-                            m_texture->begin();
-                        }
-                        GL_ShapeDrawer::Draw(m,
-                                colObj->getCollisionShape(),
-                                wireColor*btScalar(0.3), 
-                                0,
-                                aabbMin,aabbMax);
-                        if(m_textureenabled){
-                            m_texture->end();
-                        }
-                        break;
-                    }
-
-            }
         }
     }
 }
