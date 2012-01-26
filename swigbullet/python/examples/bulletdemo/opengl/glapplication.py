@@ -2,11 +2,11 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
 import numpy
+import swigbullet as bullet
 from . import demoapplication
 from . import glshapedrawer 
 from . import gldebugfont
 from . import vector3
-import bullet.opengl.gldebugdrawer
 
 
 class GLApplication(demoapplication.DemoApplication):

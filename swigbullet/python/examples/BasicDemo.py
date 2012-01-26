@@ -2,8 +2,8 @@ import sys
 from OpenGL.GL import *
 from OpenGL.GLU import *
 import swigbullet as bullet
-from swigbullet.opengl.sdl import main, DemoApplication
-#from bullet.opengl.glut import main, DemoApplication
+#from bulletdemo.opengl.sdl import main, DemoApplication
+from bulletdemo.opengl.glut import main, DemoApplication
 
 
 # create 125 (5x5x5) dynamic object

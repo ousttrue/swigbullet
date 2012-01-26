@@ -1,7 +1,7 @@
 import sys
 import irr
-import bullet
-import bullet.opengl.gldebugdrawer
+import swigbullet as bullet
+import bulletdemo.opengl.gldebugdrawer
 from . import demoapplication
 
 
@@ -19,7 +19,7 @@ class DemoApplication(demoapplication.DemoApplication):
 
 def main(argv, width, height, title, demoApp):
     demoApp.initPhysics();
-    #debugDrawer=bullet.opengl.gldebugdrawer.GLDebugDrawer()
+    #debugDrawer=bulletdemo.opengl.gldebugdrawer.GLDebugDrawer()
     #demoApp.getDynamicsWorld().setDebugDrawer(debugDrawer);
 
     device = irr.createDevice(irr.video.EDT_OPENGL,

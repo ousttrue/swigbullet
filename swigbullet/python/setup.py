@@ -55,6 +55,6 @@ setup (name = 'swigbullet',
         ext_modules = [
             sub_module('__init__'),
             ],
-        packages=['swigbullet.opengl']
+        #packages=['swigbullet.opengl']
         )
 

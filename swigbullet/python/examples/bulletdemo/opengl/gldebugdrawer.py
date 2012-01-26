@@ -1,4 +1,4 @@
-import bullet
+import swigbullet as bullet
 
 
 class GLDebugDrawer(bullet.btIDebugDraw):

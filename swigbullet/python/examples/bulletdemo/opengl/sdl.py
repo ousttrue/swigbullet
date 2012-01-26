@@ -1,8 +1,8 @@
 import sys
 import pygame
 from pygame.locals import *
-import bullet
-import bullet.opengl.gldebugdrawer
+import swigbullet as bullet
+import bulletdemo.opengl.gldebugdrawer
 from . import glapplication
 
 
@@ -20,7 +20,7 @@ class DemoApplication(glapplication.GLApplication):
 
 def main(argv, width, height, title, demoApp):
     demoApp.initPhysics();
-    #debugDrawer=bullet.opengl.gldebugdrawer.GLDebugDrawer()
+    #debugDrawer=bulletdemo.opengl.gldebugdrawer.GLDebugDrawer()
     #demoApp.getDynamicsWorld().setDebugDrawer(debugDrawer);
 
     pygame.init()

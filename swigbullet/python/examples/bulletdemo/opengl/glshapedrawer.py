@@ -1,7 +1,7 @@
 import numpy
 from OpenGL.GL import *
 from OpenGL.GLU import *
-import bullet
+import swigbullet as bullet
 from . import vector3
 
 

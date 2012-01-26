@@ -1,7 +1,7 @@
 import sys
 import math
 import abc
-import bullet
+import swigbullet as bullet
 from . import vector3
 
 

@@ -1,6 +1,7 @@
 from OpenGL.GLUT import *
 from . import glapplication
-import bullet.opengl.gldebugdrawer
+import swigbullet as bullet
+import bulletdemo.opengl.gldebugdrawer
 
 
 class DemoApplication(glapplication.GLApplication):
@@ -83,7 +84,7 @@ def main(argv, width, height, title, demoApp):
     global gDemoApplication
     gDemoApplication = demoApp;
     gDemoApplication.initPhysics();
-    debugDrawer=bullet.opengl.gldebugdrawer.GLDebugDrawer()
+    debugDrawer=bulletdemo.opengl.gldebugdrawer.GLDebugDrawer()
     gDemoApplication.getDynamicsWorld().setDebugDrawer(debugDrawer);
 
     glutInit(argv);
