@@ -7,6 +7,7 @@ from bulletdemo.camera import Camera
 from bulletdemo.bulletworld import BulletWorld
 from bulletdemo import vector3
 from bulletdemo.profiler import Profiler
+from bulletdemo.texture import Texture
 
 
 #create 125 (5x5x5) dynamic object
@@ -29,6 +30,8 @@ class Controller(object):
         self.createGround()
         self.createCubes()
         self.profiler=Profiler()
+        self.texture=Texture()
+        self.m_textureenabled=True
         self.is_initialized=False
 
     def createGround(self):
@@ -166,33 +169,29 @@ class Controller(object):
 
             if (not (debugMode & bullet.btIDebugDraw.DBG_DrawWireframe)):
                 if path==0:
-                    #if(m_textureenabled):
-                    #    m_texture.begin();
-                    #}
+                    if(self.m_textureenabled):
+                        self.texture.begin();
                     bullet.Draw(m, 
                             body.getCollisionShape(),
                             wireColor,
                             debugMode,
                             aabbMin, aabbMax);
-                    #if(m_textureenabled){
-                    #    m_texture.end();
-                    #}
+                    if(self.m_textureenabled):
+                        self.texture.end();
                 elif path==1:
                     bullet.Shadow(m, m_sundirection*rot,
                             body.getCollisionShape(),
                             aabbMin, aabbMax);
                 elif path==2:
-                    #if(m_textureenabled){
-                    #    m_texture.begin();
-                    #}
+                    if(self.m_textureenabled):
+                        self.texture.begin();
                     bullet.Draw(m,
                             body.getCollisionShape(),
                             wireColor*btScalar(0.3), 
                             0,
                             aabbMin,aabbMax);
-                    #if(m_textureenabled){
-                    #    m_texture.end();
-                    #}
+                    if(self.m_textureenabled):
+                        self.texture.end();
 
 
 if __name__=="__main__":
