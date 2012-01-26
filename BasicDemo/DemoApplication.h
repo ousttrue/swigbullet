@@ -92,7 +92,6 @@ public:
 
 private:
     void myinit();
-    void render();
 };
 
 #endif //DEMO_APPLICATION_H

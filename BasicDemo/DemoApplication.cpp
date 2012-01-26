@@ -327,24 +327,6 @@ void DemoApplication::mouseMotionFunc(int x,int y)
 }
 
 
-void DemoApplication::displayCallback(void)
-{
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    myinit();
-    m_camera->updateCamera();
-    render();
-    //optional but useful: debug drawing to detect problems
-    {
-        m_camera->setOrthographicProjection();
-        m_profiler->render(m_bulletworld->isIdle(), getDebugMode());
-        m_camera->resetPerspectiveProjection();
-    }
-    glDisable(GL_LIGHTING);
-    m_bulletworld->debugDraw();
-    glFlush();
-}
-
-
 static inline btVector3 getColor(int state, int i)
 {
     ///color differently for active, sleeping, wantsdeactivation states
@@ -487,76 +469,100 @@ static void renderscene(btDynamicsWorld *dynamicsWorld, int pass, int debugMode,
     }
 }
 
-void DemoApplication::render()
+static void renderwithshadow(btDynamicsWorld *dynamicsWorld, 
+        bool textureenabled, Texture *texture, 
+        const btVector3 &sundirection, int debugMode)
 {
+    glClear(GL_STENCIL_BUFFER_BIT);
+    // default draw
+    glEnable(GL_CULL_FACE);
+    if(textureenabled){
+        texture->begin();
+    }
+    renderscene(dynamicsWorld, 0, debugMode, sundirection);
+    if(textureenabled){
+        texture->end();
+    }
+    // shadow pass 1(GL_CCW)
+    glDisable(GL_LIGHTING);
+    glDepthMask(GL_FALSE);
+    glDepthFunc(GL_LEQUAL);
+    glEnable(GL_STENCIL_TEST);
+    glColorMask(GL_FALSE,GL_FALSE,GL_FALSE,GL_FALSE);
+    glStencilFunc(GL_ALWAYS,1,0xFFFFFFFFL);
+    glFrontFace(GL_CCW);
+    glStencilOp(GL_KEEP,GL_KEEP,GL_INCR);
+    renderscene(dynamicsWorld, 1, debugMode, sundirection);
+    // shadow pass 2(GL_CW)
+    glFrontFace(GL_CW);
+    glStencilOp(GL_KEEP,GL_KEEP,GL_DECR);
+    renderscene(dynamicsWorld, 1, debugMode, sundirection);
+    // shadow pass 3
+    glFrontFace(GL_CCW);
+    glPolygonMode(GL_FRONT,GL_FILL);
+    glPolygonMode(GL_BACK,GL_FILL);
+    glShadeModel(GL_SMOOTH);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    glEnable(GL_LIGHTING);
+    glDepthMask(GL_TRUE);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CCW);
+    glEnable(GL_CULL_FACE);
+    glColorMask(GL_TRUE,GL_TRUE,GL_TRUE,GL_TRUE);
+    glDepthFunc(GL_LEQUAL);
+    glStencilFunc( GL_NOTEQUAL, 0, 0xFFFFFFFFL );
+    glStencilOp( GL_KEEP, GL_KEEP, GL_KEEP );
+    glDisable(GL_LIGHTING);
+    if(textureenabled){
+        texture->begin();
+    }
+    renderscene(dynamicsWorld, 2, debugMode, sundirection);
+    if(textureenabled){
+        texture->end();
+    }
+    // restore
+    glEnable(GL_LIGHTING);
+    glDepthFunc(GL_LESS);
+    glDisable(GL_STENCIL_TEST);
+    glDisable(GL_CULL_FACE);
+}
+
+static void render(btDynamicsWorld *dynamicsWorld, int debugMode)
+{
+    glDisable(GL_CULL_FACE);
+    renderscene(dynamicsWorld, 0, debugMode, btVector3());
+}
+
+void DemoApplication::displayCallback(void)
+{
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    myinit();
+    m_camera->updateCamera();
     btDynamicsWorld *dynamicsWorld=m_bulletworld->getDynamicsWorld();
-    if(dynamicsWorld==0){
-        return;
-    }
-    if(m_enableshadows) {
-        glClear(GL_STENCIL_BUFFER_BIT);
-        // default draw
-        glEnable(GL_CULL_FACE);
-        if(m_textureenabled){
-            m_texture->begin();
+    if(dynamicsWorld){
+        if(m_enableshadows) {
+            renderwithshadow(dynamicsWorld, m_textureenabled, m_texture, 
+                    m_sundirection, getDebugMode());
         }
-        renderscene(dynamicsWorld, 0, getDebugMode(), m_sundirection);
-        if(m_textureenabled){
-            m_texture->end();
-        }
-        // shadow pass 1(GL_CCW)
-        glDisable(GL_LIGHTING);
-        glDepthMask(GL_FALSE);
-        glDepthFunc(GL_LEQUAL);
-        glEnable(GL_STENCIL_TEST);
-        glColorMask(GL_FALSE,GL_FALSE,GL_FALSE,GL_FALSE);
-        glStencilFunc(GL_ALWAYS,1,0xFFFFFFFFL);
-        glFrontFace(GL_CCW);
-        glStencilOp(GL_KEEP,GL_KEEP,GL_INCR);
-        renderscene(dynamicsWorld, 1, getDebugMode(), m_sundirection);
-        // shadow pass 2(GL_CW)
-        glFrontFace(GL_CW);
-        glStencilOp(GL_KEEP,GL_KEEP,GL_DECR);
-        renderscene(dynamicsWorld, 1, getDebugMode(), m_sundirection);
-        // shadow pass 3
-        glFrontFace(GL_CCW);
-        glPolygonMode(GL_FRONT,GL_FILL);
-        glPolygonMode(GL_BACK,GL_FILL);
-        glShadeModel(GL_SMOOTH);
-        glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LESS);
-        glEnable(GL_LIGHTING);
-        glDepthMask(GL_TRUE);
-        glCullFace(GL_BACK);
-        glFrontFace(GL_CCW);
-        glEnable(GL_CULL_FACE);
-        glColorMask(GL_TRUE,GL_TRUE,GL_TRUE,GL_TRUE);
-        glDepthFunc(GL_LEQUAL);
-        glStencilFunc( GL_NOTEQUAL, 0, 0xFFFFFFFFL );
-        glStencilOp( GL_KEEP, GL_KEEP, GL_KEEP );
-        glDisable(GL_LIGHTING);
-        if(m_textureenabled){
-            m_texture->begin();
-        }
-        renderscene(dynamicsWorld, 2, getDebugMode(), m_sundirection);
-        if(m_textureenabled){
-            m_texture->end();
-        }
-        // restore
-        glEnable(GL_LIGHTING);
-        glDepthFunc(GL_LESS);
-        glDisable(GL_STENCIL_TEST);
-        glDisable(GL_CULL_FACE);
-    }
-    else {
-        glDisable(GL_CULL_FACE);
-        if(m_textureenabled){
-            m_texture->begin();
-        }
-        renderscene(dynamicsWorld, 0, getDebugMode(), m_sundirection);
-        if(m_textureenabled){
-            m_texture->end();
+        else{
+            if(m_textureenabled){
+                m_texture->begin();
+            }
+            render(dynamicsWorld, getDebugMode());
+            if(m_textureenabled){
+                m_texture->end();
+            }
         }
     }
+    //optional but useful: debug drawing to detect problems
+    {
+        m_camera->setOrthographicProjection();
+        m_profiler->render(m_bulletworld->isIdle(), getDebugMode());
+        m_camera->resetPerspectiveProjection();
+    }
+    glDisable(GL_LIGHTING);
+    m_bulletworld->debugDraw();
+    glFlush();
 }
 
