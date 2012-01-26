@@ -105,5 +105,7 @@ files {
     'GLDebugFont.h',
     'profiler.cpp',
     'profiler.h',
+    'texture.cpp',
+    'texture.h',
 }
 

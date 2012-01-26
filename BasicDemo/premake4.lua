@@ -56,8 +56,6 @@ files {
     'GlutStuff.cpp',
     'GlutStuff.h',
     'main.cpp',
-    'texture.cpp',
-    'texture.h',
 }
 links {
     'gldrawer',

@@ -23,6 +23,8 @@ class btConvexPolyhedron;
 class btUniformScalingShape;
 class btCompoundShape;
 class btMultiSphereShape;
+class btDynamicsWorld;
+class Texture;
 
 
 namespace GL_ShapeDrawer {
@@ -71,6 +73,12 @@ void Shadow(const btScalar* m,
         const btVector3& extrusion,
         const btCollisionShape* shape,
         const btVector3& worldBoundsMin,const btVector3& worldBoundsMax);
+
+void renderwithshadow(btDynamicsWorld *dynamicsWorld, 
+        bool textureenabled, Texture *texture, 
+        const btVector3 &sundirection, int debugMode);
+
+void render(btDynamicsWorld *dynamicsWorld, int debugMode);
 
 }
 
