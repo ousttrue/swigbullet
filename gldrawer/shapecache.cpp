@@ -1,11 +1,5 @@
 #include "shapecache.h"
-#ifdef _WINDOWS
-#include <windows.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
-#else
-#include <GL/gl.h>
-#endif //_WINDOWS
+#include "GlStuff.h"
 #include "BulletCollision/CollisionShapes/btPolyhedralConvexShape.h"
 #include "BulletCollision/CollisionShapes/btTriangleMeshShape.h"
 #include "BulletCollision/CollisionShapes/btBoxShape.h"

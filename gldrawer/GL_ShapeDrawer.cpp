@@ -17,7 +17,7 @@
 
 
 #include "shapecache.h"
-#include "GlutStuff.h"
+#include "GlStuff.h"
 #include "BulletCollision/CollisionShapes/btPolyhedralConvexShape.h"
 #include "BulletCollision/CollisionShapes/btTriangleMeshShape.h"
 #include "BulletCollision/CollisionShapes/btBoxShape.h"

@@ -12,12 +12,8 @@ subject to the following restrictions:
 2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
 */
-#ifndef GLUT_STUFF_H
-#define GLUT_STUFF_H
-
-#ifdef _WIN32//for glut.h
-#include <windows.h>
-#endif
+#ifndef GL_STUFF_H
+#define GL_STUFF_H
 
 //think different
 #if defined(__APPLE__) && !defined (VMDMESA)
@@ -25,7 +21,6 @@ subject to the following restrictions:
 #include <OpenGL/gl.h>
 #include <OpenGL/glu.h>
 #else
-
 
 #ifdef _WINDOWS
 #include <windows.h>
@@ -35,25 +30,6 @@ subject to the following restrictions:
 #include <GL/gl.h>
 #endif //_WINDOWS
 #endif //APPLE
-
-#define BT_KEY_K 'k'
-#define BT_KEY_LEFT			GLUT_KEY_LEFT
-#define BT_KEY_RIGHT		GLUT_KEY_RIGHT
-#define BT_KEY_UP			GLUT_KEY_UP
-#define BT_KEY_DOWN			GLUT_KEY_DOWN
-#define	BT_KEY_F1			GLUT_KEY_F1
-#define	BT_KEY_F2			GLUT_KEY_F2
-#define	BT_KEY_F3			GLUT_KEY_F3
-#define	BT_KEY_F4			GLUT_KEY_F4
-#define	BT_KEY_F5			GLUT_KEY_F5
-#define BT_KEY_PAGEUP		GLUT_KEY_PAGE_UP
-#define BT_KEY_PAGEDOWN		GLUT_KEY_PAGE_DOWN
-#define BT_KEY_END			GLUT_KEY_END
-#define BT_KEY_HOME			GLUT_KEY_HOME
-#define BT_ACTIVE_ALT		GLUT_ACTIVE_ALT
-#define	BT_ACTIVE_CTRL		GLUT_ACTIVE_ALT
-#define BT_ACTIVE_SHIFT		GLUT_ACTIVE_SHIFT
-
 
 #if defined(BT_USE_DOUBLE_PRECISION)
 #define btglLoadMatrix glLoadMatrixd
@@ -67,4 +43,4 @@ subject to the following restrictions:
 #define btglVertex3 glVertex3d
 #endif
 
-#endif //GLUT_STUFF_H
+#endif

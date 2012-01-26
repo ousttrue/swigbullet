@@ -48,7 +48,12 @@ end
 
 configuration {"Windows"}
 do
-    defines { "_CRT_SECURE_NO_WARNINGS","_CRT_SECURE_NO_DEPRECATE"}
+    defines { 
+        "_CRT_SECURE_NO_WARNINGS",
+        "_CRT_SECURE_NO_DEPRECATE",
+        "_WIN32",
+        "_WINDOWS",
+    }
 end
 
 configuration {}
@@ -80,6 +85,7 @@ do
     defines { "_CRT_SECURE_NO_WARNINGS","_CRT_SECURE_NO_DEPRECATE"}
 end
 
+------------------------------------------------------------------------------
 project "gldrawer"
 
 language "C++"
@@ -90,7 +96,7 @@ includedirs {
 files {
     'GL_ShapeDrawer.cpp',
     'GL_ShapeDrawer.h',
-    'GlutStuff.h',
+    'GlStuff.h',
     'shapecache.cpp',
     'shapecache.h',
 }
