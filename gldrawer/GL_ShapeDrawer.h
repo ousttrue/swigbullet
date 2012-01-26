@@ -47,15 +47,6 @@ void Shape(const btScalar* m, const btCollisionShape *shape,
         int debugMode,
         const btVector3& worldBoundsMin, const btVector3& worldBoundsMax);
 
-void Draw(const btScalar* m, const btCollisionShape* shape, 
-        const btVector3& color,
-        int debugMode,
-        const btVector3& worldBoundsMin,const btVector3& worldBoundsMax);
-void Shadow(const btScalar* m, 
-        const btVector3& extrusion,
-        const btCollisionShape* shape,
-        const btVector3& worldBoundsMin,const btVector3& worldBoundsMax);
-
 void MultiSphereShape(const btScalar* m, 
         const btMultiSphereShape* multiSphereShape,
         const btVector3& color,
@@ -70,6 +61,17 @@ void CompoundShape(const btScalar *m,
         const btVector3& color,
         int debugMode,
         const btVector3& worldBoundsMin,const btVector3& worldBoundsMax);
+
+void Draw(const btScalar* m, const btCollisionShape* shape, 
+        const btVector3& color,
+        int debugMode,
+        const btVector3& worldBoundsMin,const btVector3& worldBoundsMax);
+
+void Shadow(const btScalar* m, 
+        const btVector3& extrusion,
+        const btCollisionShape* shape,
+        const btVector3& worldBoundsMin,const btVector3& worldBoundsMax);
+
 }
 
 

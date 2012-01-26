@@ -1,6 +1,7 @@
 # coding: utf-8
 import sys
 from OpenGL.GL import *
+import numpy
 import swigbullet as bullet
 #from swigbullet import GL_ShapeDrawer
 from bulletdemo.camera import Camera
@@ -32,6 +33,17 @@ class Controller(object):
         self.profiler=Profiler()
         self.texture=Texture()
         self.m_textureenabled=True
+        self.m_enableshadows=True
+        self.m_sundirection=vector3.mul((1,-2,1), 1000.0)
+        self.m_debugMode=0
+        #
+        self.light_ambient = numpy.array([0.2, 0.2, 0.2, 1.0], 'f')
+        self.light_diffuse = numpy.array([1.0, 1.0, 1.0, 1.0], 'f')
+        self.light_specular = numpy.array([1.0, 1.0, 1.0, 1.0], 'f')
+        # light_position is NOT default value
+        self.light_position0 = numpy.array([1.0, 10.0, 1.0, 0.0], 'f')
+        self.light_position1 = numpy.array([-1.0, -10.0, -1.0, 0.0], 'f')
+
         self.is_initialized=False
 
     def createGround(self):
@@ -96,6 +108,20 @@ class Controller(object):
         self.world.update()
 
     def onInitialize(self):
+        glLightfv(GL_LIGHT0, GL_AMBIENT, self.light_ambient);
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, self.light_diffuse);
+        glLightfv(GL_LIGHT0, GL_SPECULAR, self.light_specular);
+        glLightfv(GL_LIGHT0, GL_POSITION, self.light_position0);
+
+        glLightfv(GL_LIGHT1, GL_AMBIENT, self.light_ambient);
+        glLightfv(GL_LIGHT1, GL_DIFFUSE, self.light_diffuse);
+        glLightfv(GL_LIGHT1, GL_SPECULAR, self.light_specular);
+        glLightfv(GL_LIGHT1, GL_POSITION, self.light_position1);
+
+        glEnable(GL_LIGHTING);
+        glEnable(GL_LIGHT0);
+        glEnable(GL_LIGHT1);
+
         glShadeModel(GL_SMOOTH);
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LESS);
@@ -119,8 +145,52 @@ class Controller(object):
         glFlush()
 
     def render(self):
-        glDisable(GL_CULL_FACE);
-        self.renderscene(0);
+        if(self.m_enableshadows):
+            glClear(GL_STENCIL_BUFFER_BIT);
+            # default draw
+            glEnable(GL_CULL_FACE);
+            self.renderscene(0);
+            # setup stencil
+            glDisable(GL_LIGHTING);
+            glDepthMask(GL_FALSE);
+            glDepthFunc(GL_LEQUAL);
+            glEnable(GL_STENCIL_TEST);
+            glColorMask(GL_FALSE,GL_FALSE,GL_FALSE,GL_FALSE);
+            glStencilFunc(GL_ALWAYS, 1, 0xFFFFFFFF);
+            glFrontFace(GL_CCW);
+            # shadow pass 1(GL_CCW)
+            glStencilOp(GL_KEEP, GL_KEEP, GL_INCR);
+            self.renderscene(1);
+            # shadow pass 2(GL_CW)
+            glFrontFace(GL_CW);
+            glStencilOp(GL_KEEP, GL_KEEP, GL_DECR);
+            self.renderscene(1);
+            # shadow pass 3
+            glFrontFace(GL_CCW);
+            glPolygonMode(GL_FRONT,GL_FILL);
+            glPolygonMode(GL_BACK,GL_FILL);
+            glShadeModel(GL_SMOOTH);
+            glEnable(GL_DEPTH_TEST);
+            glDepthFunc(GL_LESS);
+            glEnable(GL_LIGHTING);
+            glDepthMask(GL_TRUE);
+            glCullFace(GL_BACK);
+            glFrontFace(GL_CCW);
+            glEnable(GL_CULL_FACE);
+            glColorMask(GL_TRUE,GL_TRUE,GL_TRUE,GL_TRUE);
+            glDepthFunc(GL_LEQUAL);
+            glStencilFunc(GL_NOTEQUAL, 0, 0xFFFFFFFF);
+            glStencilOp( GL_KEEP, GL_KEEP, GL_KEEP );
+            glDisable(GL_LIGHTING);
+            self.renderscene(2);
+            # restore
+            glEnable(GL_LIGHTING);
+            glDepthFunc(GL_LESS);
+            glDisable(GL_STENCIL_TEST);
+            glDisable(GL_CULL_FACE);
+        else:
+            glDisable(GL_CULL_FACE);
+            self.renderscene(0);
 
     def getColor(self, state, odd):
         # color differently for active, sleeping, wantsdeactivation states
@@ -165,21 +235,20 @@ class Controller(object):
                     (bullet.BT_LARGE_FLOAT,bullet.BT_LARGE_FLOAT,bullet.BT_LARGE_FLOAT));
             aabbMax=vector3.add(aabbMax, 
                     (bullet.BT_LARGE_FLOAT,bullet.BT_LARGE_FLOAT,bullet.BT_LARGE_FLOAT));
-            debugMode=0
 
-            if (not (debugMode & bullet.btIDebugDraw.DBG_DrawWireframe)):
+            if (not (self.m_debugMode & bullet.btIDebugDraw.DBG_DrawWireframe)):
                 if path==0:
                     if(self.m_textureenabled):
                         self.texture.begin();
                     bullet.Draw(m, 
                             body.getCollisionShape(),
                             wireColor,
-                            debugMode,
+                            self.m_debugMode,
                             aabbMin, aabbMax);
                     if(self.m_textureenabled):
                         self.texture.end();
                 elif path==1:
-                    bullet.Shadow(m, m_sundirection*rot,
+                    bullet.Shadow(m, rot.apply(self.m_sundirection),
                             body.getCollisionShape(),
                             aabbMin, aabbMax);
                 elif path==2:
@@ -187,7 +256,7 @@ class Controller(object):
                         self.texture.begin();
                     bullet.Draw(m,
                             body.getCollisionShape(),
-                            wireColor*btScalar(0.3), 
+                            vector3.mul(wireColor, 0.3),
                             0,
                             aabbMin,aabbMax);
                     if(self.m_textureenabled):
