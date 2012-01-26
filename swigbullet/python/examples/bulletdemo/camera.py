@@ -22,6 +22,7 @@ class Camera(object):
         self.m_frustumZFar=10000.0
         self.m_ortho=False
         self.stepsize=5.0;
+        self.update()
 
     def stepLeft(self):
         self.m_azi -= self.stepsize;
@@ -54,6 +55,7 @@ class Camera(object):
     def resize(self, w, h):
         self.m_glutScreenWidth = w;
         self.m_glutScreenHeight = h;
+        self.update()
 
     def getAspectRatio(self):
         return self.m_glutScreenWidth / float(self.m_glutScreenHeight);
@@ -105,10 +107,7 @@ class Camera(object):
         rayTo = vector3.sub(rayTo, vector3.mul(dVert * y));
         return rayTo;
 
-    def draw(self):
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-
+    def update(self):
         rele = self.m_ele * (0.01745329251994329547); # rads per deg
         razi = self.m_azi * (0.01745329251994329547); # rads per deg
 
@@ -129,8 +128,12 @@ class Camera(object):
 
         self.m_cameraPosition=[e + t for e, t in zip(eyePos, self.m_cameraTargetPosition)]
 
+    def draw(self):
         if (self.m_glutScreenWidth == 0 and self.m_glutScreenHeight == 0):
             return;
+
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
 
         aspect = self.getAspectRatio()
         extents=(aspect, 1.0, 0.0);
