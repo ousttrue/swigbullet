@@ -7,6 +7,7 @@ from distutils.dir_util import mkpath
 
 BULLET_DIR='../../bullet-2.79'
 PY_MODULE_DIR='build/lib.win32-2.7/swigbullet'
+GLDRAWER_DIR='../../gldrawer'
 
 # copy to current
 def remove_if_eixsts(f):
@@ -20,6 +21,7 @@ mkpath(PY_MODULE_DIR)
 
 include_dirs=[
         BULLET_DIR,
+        GLDRAWER_DIR,
         ]
 
 def sub_module(name):
@@ -41,10 +43,12 @@ def sub_module(name):
                 ],
             library_dirs=[os.path.join(BULLET_DIR, '../release')],
             libraries=[
+                'gldrawer',
                 'BulletSoftBody',
                 'BulletDynamics',
                 'BulletCollision',
                 'LinearMath',
+                'opengl32',
                 ]
             )
 

@@ -4,6 +4,7 @@ SIMD_EPSILON=0.0000001192092896;
 }
 %{
 #include <btBulletDynamicsCommon.h>
+#include <GL_ShapeDrawer.h>
 %}
 
 //////////////////////////////////////////////////////////////////////////////
@@ -103,6 +104,25 @@ SIMD_EPSILON=0.0000001192092896;
 %typemap(ignore) (btScalar *m)(btScalar tmpM[16]) {
     $1=tmpM;    
 }
+// Draw
+%typemap(in)(const btScalar *m)(btScalar tmpM[16]) {
+    if (PyTuple_Check($input)) {
+        if (!PyArg_ParseTuple($input,"ffffffffffffffff", 
+                    tmpM+0, tmpM+1, tmpM+2, tmpM+3,
+                    tmpM+4, tmpM+5, tmpM+6, tmpM+7,
+                    tmpM+8, tmpM+9, tmpM+10, tmpM+11,
+                    tmpM+12, tmpM+13, tmpM+14, tmpM+15
+                    )) {
+            PyErr_SetString(PyExc_TypeError,"tuple must have 16 elements");
+            return NULL;
+        }
+        $1 = tmpM;
+    }
+    else{
+        PyErr_SetString(PyExc_TypeError,"expected a tuple.");
+        return NULL;
+    }
+}
 %typemap(argout) (btScalar *m) {
     PyObject *o = PyTuple_New(16);
     for(int i=0; i<16; ++i){
@@ -110,11 +130,11 @@ SIMD_EPSILON=0.0000001192092896;
     }
 
     if ((!$result) || ($result == Py_None)) {
-        // ’P“Æ‚Ì•Ô‚è’l
+        // å˜ç‹¬ã®è¿”ã‚Šå€¤
         $result = o;
     } 
     else if(PyTuple_Check($result)){
-        // Šù‘¶‚Ìtuple•Ô‚è’l‚Æ˜AŒ‹
+        // æ—¢å­˜ã®tupleè¿”ã‚Šå€¤ã¨é€£çµ
         PyObject *o2 = $result;
 
         PyObject *o3 = PyTuple_New(1);
@@ -125,7 +145,7 @@ SIMD_EPSILON=0.0000001192092896;
         Py_DECREF(o3);
     }
     else{
-        // ”ñtuple•Ô‚è’l‚Æ˜AŒ‹
+        // éžtupleè¿”ã‚Šå€¤ã¨é€£çµ
         PyObject *o2=$result;
         $result=PyTuple_New(2);
         PyTuple_SetItem($result, 0, o2);
@@ -184,6 +204,8 @@ SIMD_EPSILON=0.0000001192092896;
 %include "BulletDynamics/ConstraintSolver/btUniversalConstraint.h"
 %include "BulletDynamics/ConstraintSolver/btHinge2Constraint.h"
 %include "BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolver.h"
+
+%include "GL_ShapeDrawer.h"
 
 //////////////////////////////////////////////////////////////////////////////
 // template
