@@ -345,58 +345,6 @@ void DemoApplication::displayCallback(void)
 }
 
 
-void DemoApplication::render()
-{
-    if(m_enableshadows) {
-        glClear(GL_STENCIL_BUFFER_BIT);
-        // default draw
-        glEnable(GL_CULL_FACE);
-        renderscene(0);
-        // shadow pass 1(GL_CCW)
-        glDisable(GL_LIGHTING);
-        glDepthMask(GL_FALSE);
-        glDepthFunc(GL_LEQUAL);
-        glEnable(GL_STENCIL_TEST);
-        glColorMask(GL_FALSE,GL_FALSE,GL_FALSE,GL_FALSE);
-        glStencilFunc(GL_ALWAYS,1,0xFFFFFFFFL);
-        glFrontFace(GL_CCW);
-        glStencilOp(GL_KEEP,GL_KEEP,GL_INCR);
-        renderscene(1);
-        // shadow pass 2(GL_CW)
-        glFrontFace(GL_CW);
-        glStencilOp(GL_KEEP,GL_KEEP,GL_DECR);
-        renderscene(1);
-        // shadow pass 3
-        glFrontFace(GL_CCW);
-        glPolygonMode(GL_FRONT,GL_FILL);
-        glPolygonMode(GL_BACK,GL_FILL);
-        glShadeModel(GL_SMOOTH);
-        glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LESS);
-        glEnable(GL_LIGHTING);
-        glDepthMask(GL_TRUE);
-        glCullFace(GL_BACK);
-        glFrontFace(GL_CCW);
-        glEnable(GL_CULL_FACE);
-        glColorMask(GL_TRUE,GL_TRUE,GL_TRUE,GL_TRUE);
-        glDepthFunc(GL_LEQUAL);
-        glStencilFunc( GL_NOTEQUAL, 0, 0xFFFFFFFFL );
-        glStencilOp( GL_KEEP, GL_KEEP, GL_KEEP );
-        glDisable(GL_LIGHTING);
-        renderscene(2);
-        // restore
-        glEnable(GL_LIGHTING);
-        glDepthFunc(GL_LESS);
-        glDisable(GL_STENCIL_TEST);
-        glDisable(GL_CULL_FACE);
-    }
-    else {
-        glDisable(GL_CULL_FACE);
-        renderscene(0);
-    }
-}
-
-
 static inline btVector3 getColor(int state, int i)
 {
     ///color differently for active, sleeping, wantsdeactivation states
@@ -496,33 +444,23 @@ static void rendershadowcolor(int i, btCollisionObject *colObj,
             0,
             aabbMin,aabbMax);
 }
-void DemoApplication::renderscene(int pass)
+static void renderscene(btDynamicsWorld *dynamicsWorld, int pass, int debugMode,
+        const btVector3 &sundirection)
 {
-    btDynamicsWorld *dynamicsWorld=m_bulletworld->getDynamicsWorld();
-    if(dynamicsWorld==0){
-        return;
-    }
     btVector3 aabbMin,aabbMax;
     dynamicsWorld->getBroadphase()->getBroadphaseAabb(aabbMin,aabbMax);
     aabbMin-=btVector3(BT_LARGE_FLOAT,BT_LARGE_FLOAT,BT_LARGE_FLOAT);
     aabbMax+=btVector3(BT_LARGE_FLOAT,BT_LARGE_FLOAT,BT_LARGE_FLOAT);
-    int debugMode=getDebugMode();
     if (!(debugMode& btIDebugDraw::DBG_DrawWireframe)){
         const int numObjects=dynamicsWorld->getNumCollisionObjects();
         switch(pass)
         {
             case 0:
                 {
-                    if(m_textureenabled){
-                        m_texture->begin();
-                    }
                     for(int i=0;i<numObjects;i++)
                     {
                         renderobj(i, dynamicsWorld->getCollisionObjectArray()[i],
                                 aabbMin, aabbMax, debugMode);
-                    }
-                    if(m_textureenabled){
-                        m_texture->end();
                     }
                     break;
                 }
@@ -531,26 +469,93 @@ void DemoApplication::renderscene(int pass)
                     for(int i=0;i<numObjects;i++)
                     {
                         rendershadowvolume(dynamicsWorld->getCollisionObjectArray()[i],
-                                aabbMin, aabbMax, m_sundirection);
+                                aabbMin, aabbMax, sundirection);
                     }
                     break;
                 }
             case 2:
                 {
-                    if(m_textureenabled){
-                        m_texture->begin();
-                    }
                     for(int i=0;i<numObjects;i++)
                     {
                         rendershadowcolor(i, dynamicsWorld->getCollisionObjectArray()[i],
                                 aabbMin, aabbMax);
                     }
-                    if(m_textureenabled){
-                        m_texture->end();
-                    }
                     break;
                 }
 
+        }
+    }
+}
+
+void DemoApplication::render()
+{
+    btDynamicsWorld *dynamicsWorld=m_bulletworld->getDynamicsWorld();
+    if(dynamicsWorld==0){
+        return;
+    }
+    if(m_enableshadows) {
+        glClear(GL_STENCIL_BUFFER_BIT);
+        // default draw
+        glEnable(GL_CULL_FACE);
+        if(m_textureenabled){
+            m_texture->begin();
+        }
+        renderscene(dynamicsWorld, 0, getDebugMode(), m_sundirection);
+        if(m_textureenabled){
+            m_texture->end();
+        }
+        // shadow pass 1(GL_CCW)
+        glDisable(GL_LIGHTING);
+        glDepthMask(GL_FALSE);
+        glDepthFunc(GL_LEQUAL);
+        glEnable(GL_STENCIL_TEST);
+        glColorMask(GL_FALSE,GL_FALSE,GL_FALSE,GL_FALSE);
+        glStencilFunc(GL_ALWAYS,1,0xFFFFFFFFL);
+        glFrontFace(GL_CCW);
+        glStencilOp(GL_KEEP,GL_KEEP,GL_INCR);
+        renderscene(dynamicsWorld, 1, getDebugMode(), m_sundirection);
+        // shadow pass 2(GL_CW)
+        glFrontFace(GL_CW);
+        glStencilOp(GL_KEEP,GL_KEEP,GL_DECR);
+        renderscene(dynamicsWorld, 1, getDebugMode(), m_sundirection);
+        // shadow pass 3
+        glFrontFace(GL_CCW);
+        glPolygonMode(GL_FRONT,GL_FILL);
+        glPolygonMode(GL_BACK,GL_FILL);
+        glShadeModel(GL_SMOOTH);
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LESS);
+        glEnable(GL_LIGHTING);
+        glDepthMask(GL_TRUE);
+        glCullFace(GL_BACK);
+        glFrontFace(GL_CCW);
+        glEnable(GL_CULL_FACE);
+        glColorMask(GL_TRUE,GL_TRUE,GL_TRUE,GL_TRUE);
+        glDepthFunc(GL_LEQUAL);
+        glStencilFunc( GL_NOTEQUAL, 0, 0xFFFFFFFFL );
+        glStencilOp( GL_KEEP, GL_KEEP, GL_KEEP );
+        glDisable(GL_LIGHTING);
+        if(m_textureenabled){
+            m_texture->begin();
+        }
+        renderscene(dynamicsWorld, 2, getDebugMode(), m_sundirection);
+        if(m_textureenabled){
+            m_texture->end();
+        }
+        // restore
+        glEnable(GL_LIGHTING);
+        glDepthFunc(GL_LESS);
+        glDisable(GL_STENCIL_TEST);
+        glDisable(GL_CULL_FACE);
+    }
+    else {
+        glDisable(GL_CULL_FACE);
+        if(m_textureenabled){
+            m_texture->begin();
+        }
+        renderscene(dynamicsWorld, 0, getDebugMode(), m_sundirection);
+        if(m_textureenabled){
+            m_texture->end();
         }
     }
 }

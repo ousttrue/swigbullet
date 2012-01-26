@@ -93,7 +93,6 @@ public:
 private:
     void myinit();
     void render();
-    void renderscene(int pass);
 };
 
 #endif //DEMO_APPLICATION_H
