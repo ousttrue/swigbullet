@@ -29,11 +29,15 @@ START_POS_Z=-3
 class Controller(object):
     def __init__(self):
         self.view=Camera(50)
+        # bullet
+        self.world=None
         self.world=BulletWorld()
         self.createGround()
         self.createCubes()
+        # gldrawer
         self.profiler=Profiler()
         self.texture=Texture()
+        # scene
         self.m_textureenabled=True
         self.m_enableshadows=True
         self.m_sundirection=vector3.mul((1,-2,1), 1000.0)
@@ -49,6 +53,8 @@ class Controller(object):
         self.is_initialized=False
 
     def createGround(self):
+        if not self.world:
+            return
         groundShape = bullet.btBoxShape((50.0, 50.0, 50.0));
         groundTransform=bullet.btTransform();
         groundTransform.setIdentity();
@@ -56,6 +62,8 @@ class Controller(object):
         self.world.localCreateRigidBody(0.0, groundTransform, groundShape)
 
     def createCubes(self):
+        if not self.world:
+            return
         colShape = bullet.btBoxShape((SCALING*1,SCALING*1,SCALING*1));
         startTransform=bullet.btTransform();
         startTransform.setIdentity();
@@ -108,6 +116,8 @@ class Controller(object):
         print 'onKeyDown', keycode
 
     def onUpdate(self, d):
+        if not self.world:
+            return
         self.world.update()
 
     def onInitialize(self):
@@ -138,16 +148,17 @@ class Controller(object):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         # render
         self.view.draw()
-        if self.m_enableshadows:
-            bullet.renderwithshadow(self.world.m_dynamicsWorld, 
-                    self.m_textureenabled, self.texture,
-                    self.m_sundirection, self.m_debugMode)
-        else:
-            bullet.render(self.world.m_dynamicsWorld, self.m_debugMode)
-        # profiler
-        self.view.setOrthographicProjection();
-        self.profiler.render(self.world.m_idle, self.m_debugMode)
-        self.view.resetPerspectiveProjection();
+        if self.world:
+            if self.m_enableshadows:
+                bullet.renderwithshadow(self.world.m_dynamicsWorld, 
+                        self.m_textureenabled, self.texture,
+                        self.m_sundirection, self.m_debugMode)
+            else:
+                bullet.render(self.world.m_dynamicsWorld, self.m_debugMode)
+            # profiler
+            self.view.setOrthographicProjection();
+            self.profiler.render(self.world.m_idle, self.m_debugMode)
+            self.view.resetPerspectiveProjection();
 
         glFlush()
 
@@ -272,7 +283,44 @@ class Controller(object):
 
 if __name__=="__main__":
     controller=Controller()
-    import glglue.glut
-    glglue.glut.mainloop(controller, width=1024, height=600, 
-            title="Bullet Physics Demo. http:#bulletphysics.org")
+    #import glglue.glut
+    #glglue.glut.mainloop(controller, width=1024, height=600, 
+    #        title="Bullet Physics Demo. http:#bulletphysics.org")
+
+    #import glglue.wgl
+    #glglue.wgl.mainloop(controller, width=640, height=480, title="sample")
+
+    import pygame
+    from pygame.locals import *
+    pygame.init()
+    size=(1024, 600)
+    pygame.display.gl_set_attribute(pygame.GL_STENCIL_SIZE, 2)
+    screen = pygame.display.set_mode(size,
+            HWSURFACE | OPENGL | DOUBLEBUF)
+
+    controller.onResize(*size)
+
+    clock = pygame.time.Clock()
+    is_running=True
+    while is_running:
+        #pressed = pygame.key.get_pressed()
+
+        # event handling
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                is_running=False
+            if event.type == KEYDOWN:
+                if event.key == K_ESCAPE:
+                    is_running=False
+                else:
+                    controller.onKeyDown(event.key)
+            
+        # update
+        d = clock.tick()
+        if d>0:
+            controller.onUpdate(d)
+            controller.draw()
+            pygame.display.flip()
+
+    sys.exit(0)
 

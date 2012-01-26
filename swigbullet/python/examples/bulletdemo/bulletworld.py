@@ -5,6 +5,7 @@ from bulletdemo import vector3
 class BulletWorld(object):
 
     def __init__(self):
+        self.m_shootBoxShape=None
         self.m_ShootBoxInitialSpeed=40.0
         self.m_defaultContactProcessingThreshold=bullet.BT_LARGE_FLOAT
         self.m_idle=False
@@ -20,6 +21,20 @@ class BulletWorld(object):
 
     def __del__(self):
         self.clear();
+        if self.m_shootBoxShape:
+            del self.m_shootBoxShape
+        del self.m_dynamicsWorld
+        del self.m_solver
+        del self.m_broadphase
+        del self.m_dispatcher
+        del self.m_collisionConfiguration
+        print self
+
+    def	clear(self):
+        #cleanup in the reverse order of creation/initialization
+        #remove the rigidbodies from the dynamics world and delete them
+        self.m_dynamicsWorld.getCollisionObjectArray().clear()
+        self.keep=[]
 
     def createWorld(self):
         #collision configuration contains default setup for memory, collision setup
@@ -61,7 +76,6 @@ class BulletWorld(object):
         #body.setContactProcessingThreshold(self.m_defaultContactProcessingThreshold);
 
         self.keep.append((body, myMotionState, shape))
-        #self.m_collisionShapes.add(shape)
 
         self.m_dynamicsWorld.addRigidBody(body);
 
@@ -127,15 +141,6 @@ class BulletWorld(object):
     def debugDraw(self):
         if (self.m_dynamicsWorld):
             self.m_dynamicsWorld.debugDrawWorld();
-
-    def	clear(self):
-        #cleanup in the reverse order of creation/initialization
-        #remove the rigidbodies from the dynamics world and delete them
-        array=self.m_dynamicsWorld.getCollisionObjectArray()
-        for i in range(self.m_dynamicsWorld.getNumCollisionObjects()-1, -1, -1):
-            m_dynamicsWorld.removeCollisionObject(array[i]);
-        self.keep=[]
-        self.m_collisionShapes=[]
 
     def removeLastObject(self):
         numObj = self.m_dynamicsWorld.getNumCollisionObjects();
