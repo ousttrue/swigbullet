@@ -88,7 +88,10 @@ includedirs {
     "../bullet-2.79",
 }
 files {
-    "**.cpp",
-    "**.h"
+    'GL_ShapeDrawer.cpp',
+    'GL_ShapeDrawer.h',
+    'GlutStuff.h',
+    'shapecache.cpp',
+    'shapecache.h',
 }
 
