@@ -28,23 +28,24 @@ verts[9] = 0;		verts[10] = 16-1;	verts[11] = 0;
 
 
 def drawCharacter(ch, spacing):
-    if ch==0:
-        return
-    cx=float(ch%16) * 1./16.0;
-    cy=float(ch/16) * 1./16.0;
+    if ch>0:
+        cx=float(ch%16) * 1./16.0;
+        cy=float(ch/16) * 1./16.0;
 
-    uv_texcoords[0] = cx;
-    uv_texcoords[1] = 1-cy-1./16.0;
-    uv_texcoords[2] = cx+1./16.0;
-    uv_texcoords[3] = 1-cy-1./16.0;
-    uv_texcoords[4] = cx+1./16.0;
-    uv_texcoords[5] = 1-cy;
-    uv_texcoords[6] = cx;
-    uv_texcoords[7] = 1-cy;
-    glTexCoordPointer(2,GL_FLOAT,0,uv_texcoords);
-    glVertexPointer(3, GL_FLOAT, 0, verts);
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-    glTranslatef(spacing,0,0);
+        uv_texcoords[0] = cx;
+        uv_texcoords[1] = 1-cy-1./16.0;
+        uv_texcoords[2] = cx+1./16.0;
+        uv_texcoords[3] = 1-cy-1./16.0;
+        uv_texcoords[4] = cx+1./16.0;
+        uv_texcoords[5] = 1-cy;
+        uv_texcoords[6] = cx;
+        uv_texcoords[7] = 1-cy;
+        glTexCoordPointer(2,GL_FLOAT,0,uv_texcoords);
+        glVertexPointer(3, GL_FLOAT, 0, verts);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        glTranslatef(spacing, 0, 0);
+    else:
+        glTranslatef(spacing/2, 0, 0);
 
 
 def	GLDebugDrawStringInternal(x, y, string, rgb, enableBlend=True, spacing=10):
@@ -118,7 +119,7 @@ def	GLDebugDrawStringInternal(x, y, string, rgb, enableBlend=True, spacing=10):
     glDisableClientState (GL_TEXTURE_COORD_ARRAY);
 
 def	GLDebugDrawString(x, y, string):
-	GLDebugDrawStringInternal(x,y,string, (1,1,1));
+	GLDebugDrawStringInternal(x, y, string, (1,1,1));
 
 def	GLDebugResetFont(screenWidth, screenHeight):
     global sTexturesInitialized

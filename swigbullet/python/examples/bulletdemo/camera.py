@@ -173,14 +173,14 @@ class Camera(object):
         # reset matrix
         glLoadIdentity();
         # set a 2D orthographic projection
-        gluOrtho2D(0, m_glutScreenWidth, 0, m_glutScreenHeight);
+        gluOrtho2D(0, self.m_glutScreenWidth, 0, self.m_glutScreenHeight);
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
         # invert the y axis, down is positive
         glScalef(1, -1, 1);
         # mover the origin from the bottom left corner
         # to the upper left corner
-        glTranslatef(btScalar(0), btScalar(-m_glutScreenHeight), btScalar(0));
+        glTranslatef(0.0, float(-self.m_glutScreenHeight), 0.0);
 
     def resetPerspectiveProjection(self):
         glMatrixMode(GL_PROJECTION);

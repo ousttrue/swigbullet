@@ -6,6 +6,7 @@ import swigbullet as bullet
 from bulletdemo.camera import Camera
 from bulletdemo.bulletworld import BulletWorld
 from bulletdemo import vector3
+from bulletdemo.profiler import Profiler
 
 
 #create 125 (5x5x5) dynamic object
@@ -27,6 +28,7 @@ class Controller(object):
         self.world=BulletWorld()
         self.createGround()
         self.createCubes()
+        self.profiler=Profiler()
         self.is_initialized=False
 
     def createGround(self):
@@ -102,8 +104,15 @@ class Controller(object):
         if not self.is_initialized:
             self.onInitialize()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        # render
         self.view.draw()
         self.render()
+        # profiler
+        self.view.setOrthographicProjection();
+        self.profiler.render(self.world.m_idle, 0, 
+                self.view.m_glutScreenWidth, self.view.m_glutScreenHeight);
+        self.view.resetPerspectiveProjection();
+
         glFlush()
 
     def render(self):
