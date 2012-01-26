@@ -264,13 +264,6 @@ class Controller(object):
 
 
 if __name__=="__main__":
-    m=(
-            0, 1, 2, 3,
-            0, 1, 2, 3,
-            0, 1, 2, 3,
-            0, 1, 2, 3
-            )
-           
     controller=Controller()
     import glglue.glut
     glglue.glut.mainloop(controller, width=1024, height=600, 
