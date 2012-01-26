@@ -4,7 +4,7 @@ SIMD_EPSILON=0.0000001192092896;
 }
 %{
 #include <btBulletDynamicsCommon.h>
-#include <GL_ShapeDrawer.h>
+#include <gldrawer.h>
 %}
 
 //////////////////////////////////////////////////////////////////////////////
@@ -206,6 +206,8 @@ SIMD_EPSILON=0.0000001192092896;
 %include "BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolver.h"
 
 %include "GL_ShapeDrawer.h"
+%include "profiler.h"
+%include "texture.h"
 
 //////////////////////////////////////////////////////////////////////////////
 // template

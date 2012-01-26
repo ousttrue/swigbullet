@@ -7,8 +7,10 @@ import swigbullet as bullet
 from bulletdemo.camera import Camera
 from bulletdemo.bulletworld import BulletWorld
 from bulletdemo import vector3
-from bulletdemo.profiler import Profiler
-from bulletdemo.texture import Texture
+#from bulletdemo.profiler import Profiler
+#from bulletdemo.texture import Texture
+from swigbullet import Profiler
+from swigbullet import Texture
 
 
 #create 125 (5x5x5) dynamic object
@@ -76,6 +78,7 @@ class Controller(object):
     def onResize(self, w, h):
         glViewport(0, 0, w, h)
         self.view.resize(w, h)
+        self.profiler.resize(w, h)
 
     def onLeftDown(self, x, y):
         print 'onLeftDown', x, y
@@ -135,11 +138,15 @@ class Controller(object):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         # render
         self.view.draw()
-        self.render()
+        if self.m_enableshadows:
+            bullet.renderwithshadow(self.world.m_dynamicsWorld, 
+                    self.m_textureenabled, self.texture,
+                    self.m_sundirection, self.m_debugMode)
+        else:
+            bullet.render(self.world.m_dynamicsWorld, self.m_debugMode)
         # profiler
         self.view.setOrthographicProjection();
-        self.profiler.render(self.world.m_idle, 0, 
-                self.view.m_glutScreenWidth, self.view.m_glutScreenHeight);
+        self.profiler.render(self.world.m_idle, self.m_debugMode)
         self.view.resetPerspectiveProjection();
 
         glFlush()

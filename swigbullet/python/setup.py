@@ -48,7 +48,7 @@ def sub_module(name):
                 'BulletDynamics',
                 'BulletCollision',
                 'LinearMath',
-                'opengl32',
+                'opengl32', 'glu32',
                 ]
             )
 
