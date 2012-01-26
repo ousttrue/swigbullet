@@ -1,7 +1,7 @@
 
 #include "GLDebugDrawer.h"
 #include "GLDebugFont.h"
-#include "GlutStuff.h"
+#include "GlStuff.h"
 
 
 

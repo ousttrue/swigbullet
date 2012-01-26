@@ -99,5 +99,11 @@ files {
     'GlStuff.h',
     'shapecache.cpp',
     'shapecache.h',
+    'GLDebugDrawer.cpp',
+    'GLDebugDrawer.h',
+    'GLDebugFont.cpp',
+    'GLDebugFont.h',
+    'profiler.cpp',
+    'profiler.h',
 }
 
