@@ -1,4 +1,4 @@
-import bullet
+import swigbullet as bullet
 
 if __name__=="__main__":
     broadphase = bullet.btDbvtBroadphase();

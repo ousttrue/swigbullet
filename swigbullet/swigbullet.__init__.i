@@ -1,4 +1,4 @@
-%module(directors="1") bullet
+%module(directors="1") swigbullet
 %pythoncode {
 SIMD_EPSILON=0.0000001192092896;
 }
