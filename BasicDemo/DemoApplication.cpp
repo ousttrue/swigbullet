@@ -45,6 +45,8 @@ DemoApplication::DemoApplication()
         m_enableshadows(true),
         m_debugMode(0),
         m_sundirection(btVector3(1,-2,1)*1000),
+        m_glutScreenWidth(1),
+        m_glutScreenHeight(1),
         m_textureenabled(true)
 {
     // bullet
@@ -55,7 +57,7 @@ DemoApplication::DemoApplication()
     createCubes();
     // opengl
     m_camera=new Camera();
-    m_camera->setCameraDistance(btScalar(50.));
+    m_camera->setCameraDistance(50.0f);
     m_texture=new Texture;
 
     m_profiler=new Profiler;
@@ -123,6 +125,8 @@ void DemoApplication::reshape(int w, int h)
     glViewport(0, 0, w, h);
     m_profiler->resize(w, h);
     m_camera->reshape(w, h);
+    m_glutScreenWidth = w;
+    m_glutScreenHeight = h;
 }
 
 
@@ -163,7 +167,7 @@ void DemoApplication::keyboardCallback(unsigned char key, int x, int y)
                    {
                        m_shooter->shootBox(m_bulletworld, 
                                m_camera->getCameraPosition(), 
-                               m_camera->getRayTo(x,y));
+                               m_camera->getRayTo(x,y, m_glutScreenWidth, m_glutScreenHeight));
                        break;
                    }
         case 'u' : enableTexture(!enableTexture(false));break;
@@ -317,7 +321,10 @@ void DemoApplication::mouseFunc(int button, int state, int x, int y)
             {
                 if (state==0) {
                     // Down
-                    m_picker->pickStart(m_bulletworld->getDynamicsWorld(), m_camera, x, y);
+                    m_picker->pickStart(m_bulletworld->getDynamicsWorld(), 
+                            m_camera->getCameraPosition(), 
+                            m_camera->getRayTo(x, y, m_glutScreenWidth, m_glutScreenHeight),
+                            m_camera->getOrtho());
                 }
                 else {
                     // Up
@@ -337,7 +344,7 @@ void DemoApplication::mouseFunc(int button, int state, int x, int y)
                     // Down
                     m_shooter->shootBox(m_bulletworld, 
                             m_camera->getCameraPosition(), 
-                            m_camera->getRayTo(x,y));
+                            m_camera->getRayTo(x,y, m_glutScreenWidth, m_glutScreenHeight));
                 }
                 break;
             }
@@ -350,21 +357,29 @@ void DemoApplication::mouseFunc(int button, int state, int x, int y)
 
 void DemoApplication::mouseMotionFunc(int x,int y)
 {
-    m_picker->pick(m_bulletworld->getDynamicsWorld(), m_camera, x, y);
+    m_picker->pick(m_bulletworld->getDynamicsWorld(), 
+            m_camera->getCameraPosition(),
+            m_camera->getRayTo(x, y, m_glutScreenWidth, m_glutScreenHeight),
+            m_camera->getOrtho()
+            );
 
     if (m_active_alt) {
         int dx = x - m_mouseOldX;
         int dy = y - m_mouseOldY;
         ///only if ALT key is pressed (Maya style)
         if(m_mouseButtons & 2) {
-            m_camera->move(dx, dy);
+            // middle
+            m_camera->move(dx, dy, m_glutScreenWidth, m_glutScreenHeight);
         }
         if(m_mouseButtons & (2 << 2) && m_mouseButtons & 1) {
+            // ?
         }
-        else if(m_mouseButtons & 1) {
+        if(m_mouseButtons & 1) {
+            // left
             m_camera->rot(dx, dy);
         }
-        else if(m_mouseButtons & 4) {
+        if(m_mouseButtons & 4) {
+            // right
             m_camera->dolly(dy);
         }
     }
@@ -376,9 +391,15 @@ void DemoApplication::mouseMotionFunc(int x,int y)
 
 void DemoApplication::displayCallback(void)
 {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     myinit();
-    m_camera->updateCamera();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // reset matrix
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    m_camera->draw();
     btDynamicsWorld *dynamicsWorld=m_bulletworld->getDynamicsWorld();
     if(dynamicsWorld){
         if(m_enableshadows) {
@@ -397,9 +418,20 @@ void DemoApplication::displayCallback(void)
     }
     //optional but useful: debug drawing to detect problems
     {
-        m_camera->setOrthographicProjection();
+        // push
+        glMatrixMode(GL_PROJECTION);
+        glPushMatrix();
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+
+        setOrthographicProjection(m_glutScreenWidth, m_glutScreenHeight);
         m_profiler->render(m_bulletworld->isIdle(), getDebugMode());
-        m_camera->resetPerspectiveProjection();
+
+        // restore
+        glMatrixMode(GL_PROJECTION);
+        glPopMatrix();
+        glMatrixMode(GL_MODELVIEW);
+        glPopMatrix();
     }
     glDisable(GL_LIGHTING);
     m_bulletworld->debugDraw();

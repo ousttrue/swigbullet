@@ -51,6 +51,8 @@ class DemoApplication
     int m_debugMode;
     btVector3 m_sundirection;
     bool m_textureenabled;
+    int m_glutScreenWidth;
+    int m_glutScreenHeight;
 #ifdef USE_BT_CLOCK
     btClock m_clock;
 #endif //USE_BT_CLOCK

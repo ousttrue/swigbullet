@@ -1,5 +1,4 @@
 #include "bulletpicker.h"
-#include "camera.h"
 #include <btBulletDynamicsCommon.h>
 
 
@@ -21,21 +20,22 @@ BulletPicker::~BulletPicker()
 }
 
 
-void BulletPicker::pickStart(btDynamicsWorld *dynamicsWorld, Camera *camera, int x, int y)
+void BulletPicker::pickStart(btDynamicsWorld *dynamicsWorld, 
+        const btVector3 &camPos, const btVector3 &rayTo, bool ortho
+        )
 {
     //add a point to point constraint for picking
     if (!dynamicsWorld) {
         return;
     }
 
-    btVector3 rayTo=camera->getRayTo(x,y);
     btVector3 rayFrom;
-    if (camera->getOrtho()) {
-        rayFrom = camera->getCameraPosition(), camera->getRayTo(x,y);
+    if (ortho) {
+        rayFrom = rayTo;
         rayFrom.setZ(-100.f);
     } 
     else {
-        rayFrom = camera->getCameraPosition();
+        rayFrom = camPos;
     }
 
     ClosestRayResultCallback rayCallback(rayFrom,rayTo);
@@ -142,69 +142,69 @@ void BulletPicker::removePickingConstraint(btDynamicsWorld *dynamicsWorld)
 }
 
 
-void BulletPicker::pick(btDynamicsWorld *dynamicsWorld, Camera *camera, int x, int y)
+void BulletPicker::pick(btDynamicsWorld *dynamicsWorld, 
+        const btVector3 &camPos, const btVector3 &rayTo, bool ortho)
 {
-	if (m_pickConstraint)
-	{
-		//move the constraint pivot
+	if (!m_pickConstraint){
+        return;
+    }
 
-		if (m_pickConstraint->getConstraintType() == D6_CONSTRAINT_TYPE)
-		{
-			btGeneric6DofConstraint* pickCon = static_cast<btGeneric6DofConstraint*>(m_pickConstraint);
-			if (pickCon)
-			{
-				//keep it at the same picking distance
+    //move the constraint pivot
+    if (m_pickConstraint->getConstraintType() == D6_CONSTRAINT_TYPE)
+    {
+        btGeneric6DofConstraint* pickCon = 
+            static_cast<btGeneric6DofConstraint*>(m_pickConstraint);
+        if(!pickCon){
+            return;
+        }
+        //keep it at the same picking distance
+        btVector3 newRayTo = rayTo;
+        btVector3 rayFrom;
+        btVector3 oldPivotInB = pickCon->getFrameOffsetA().getOrigin();
 
-				btVector3 newRayTo = camera->getRayTo(x,y);
-				btVector3 rayFrom;
-				btVector3 oldPivotInB = pickCon->getFrameOffsetA().getOrigin();
+        btVector3 newPivotB;
+        if (ortho)
+        {
+            newPivotB = oldPivotInB;
+            newPivotB.setX(newRayTo.getX());
+            newPivotB.setY(newRayTo.getY());
+        } else
+        {
+            rayFrom = camPos;
+            btVector3 dir = newRayTo-rayFrom;
+            dir.normalize();
+            dir *= gOldPickingDist;
 
-				btVector3 newPivotB;
-				if (camera->getOrtho())
-				{
-					newPivotB = oldPivotInB;
-					newPivotB.setX(newRayTo.getX());
-					newPivotB.setY(newRayTo.getY());
-				} else
-				{
-					rayFrom = camera->getCameraPosition();
-					btVector3 dir = newRayTo-rayFrom;
-					dir.normalize();
-					dir *= gOldPickingDist;
+            newPivotB = rayFrom + dir;
+        }
+        pickCon->getFrameOffsetA().setOrigin(newPivotB);
+    } 
+    else {
+        btPoint2PointConstraint* pickCon = 
+            static_cast<btPoint2PointConstraint*>(m_pickConstraint);
+        if (!pickCon){
+            return;
+        }
+        //keep it at the same picking distance
+        btVector3 newRayTo = rayTo;
+        btVector3 rayFrom;
+        btVector3 oldPivotInB = pickCon->getPivotInB();
+        btVector3 newPivotB;
+        if (ortho)
+        {
+            newPivotB = oldPivotInB;
+            newPivotB.setX(newRayTo.getX());
+            newPivotB.setY(newRayTo.getY());
+        } else
+        {
+            rayFrom = camPos;
+            btVector3 dir = newRayTo-rayFrom;
+            dir.normalize();
+            dir *= gOldPickingDist;
 
-					newPivotB = rayFrom + dir;
-				}
-				pickCon->getFrameOffsetA().setOrigin(newPivotB);
-			}
-
-		} 
-        else {
-			btPoint2PointConstraint* pickCon = static_cast<btPoint2PointConstraint*>(m_pickConstraint);
-			if (pickCon)
-			{
-				//keep it at the same picking distance
-
-				btVector3 newRayTo = camera->getRayTo(x,y);
-				btVector3 rayFrom;
-				btVector3 oldPivotInB = pickCon->getPivotInB();
-				btVector3 newPivotB;
-				if (camera->getOrtho())
-				{
-					newPivotB = oldPivotInB;
-					newPivotB.setX(newRayTo.getX());
-					newPivotB.setY(newRayTo.getY());
-				} else
-				{
-					rayFrom = camera->getCameraPosition();
-					btVector3 dir = newRayTo-rayFrom;
-					dir.normalize();
-					dir *= gOldPickingDist;
-
-					newPivotB = rayFrom + dir;
-				}
-				pickCon->setPivotB(newPivotB);
-			}
-		}
-	}
+            newPivotB = rayFrom + dir;
+        }
+        pickCon->setPivotB(newPivotB);
+    }
 }
 

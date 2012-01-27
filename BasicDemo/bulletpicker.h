@@ -6,7 +6,6 @@
 class btTypedConstraint;
 class btRigidBody;
 class btVector3;
-class Camera;
 class btDynamicsWorld;
 
 
@@ -25,8 +24,10 @@ class BulletPicker
 public:
     BulletPicker();
     ~BulletPicker();
-    void pickStart(btDynamicsWorld *dynamicsWorld, Camera *camera, int x, int y);
-    void pick(btDynamicsWorld *dynamicsWorld, Camera *camera, int x, int y);
+    void pickStart(btDynamicsWorld *dynamicsWorld,
+            const btVector3 &camPos, const btVector3 &rayTo, bool ortho);
+    void pick(btDynamicsWorld *dynamicsWorld,
+            const btVector3 &camPos, const btVector3 &rayTo, bool ortho);
     void removePickingConstraint(btDynamicsWorld *dynamicsWorld);
 };
 
