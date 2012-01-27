@@ -56,8 +56,7 @@ DemoApplication::DemoApplication()
     createGround();
     createCubes();
     // opengl
-    m_camera=new Camera();
-    m_camera->setCameraDistance(50.0f);
+    m_camera=new PerspectiveCamera();
     m_texture=new Texture;
 
     m_profiler=new Profiler;
@@ -136,156 +135,188 @@ void DemoApplication::keyboardCallback(unsigned char key, int x, int y)
 
     switch (key)
     {
-        case 'l' : m_camera->stepLeft(); break;
-        case 'r' : m_camera->stepRight(); break;
-        case 'f' : m_camera->stepFront(); break;
-        case 'b' : m_camera->stepBack(); break;
-        case 'z' : m_camera->zoomIn(); break;
-        case 'x' : m_camera->zoomOut(); break;
-        case 'i' : m_bulletworld->toggleIdle(); break;
-        case 'g' : toggleShadow();;break;
+        case 'l' : 
+            m_camera->stepLeft(); 
+            break;
+        case 'r' : 
+            m_camera->stepRight(); 
+            break;
+        case 'f' : 
+            m_camera->stepFront(); 
+            break;
+        case 'b' : 
+            m_camera->stepBack(); 
+            break;
+        case 'z' : 
+            m_camera->zoomIn(); 
+            break;
+        case 'x' : 
+            m_camera->zoomOut(); 
+            break;
+        case 'i' : 
+            m_bulletworld->toggleIdle(); 
+            break;
+        case 'g' : 
+            toggleShadow();
+            break;
         case 'o' :
-                   {
-                       m_camera->toggleOrtho();
-                       break;
-                   }
+            if(m_camera->getOrtho()){
+                delete m_camera;
+                m_camera=new PerspectiveCamera();
+            }
+            else{
+                delete m_camera;
+                m_camera=new OrthogonalCamera();
+            }
+            m_camera->reshape(m_glutScreenWidth, m_glutScreenHeight);
+            break;
         case 's' :
-                   m_bulletworld->update(getDeltaTimeMicroseconds());
-                   break;
-
+            m_bulletworld->update(getDeltaTimeMicroseconds());
+            break;
         case ' ':
-                   {
-                       m_picker->removePickingConstraint(m_bulletworld->getDynamicsWorld());
-                       if(m_bulletworld)
-                           delete m_bulletworld;
-                       m_bulletworld=new BulletWorld;
-                       createGround();
-                       createCubes();
-                       break;
-                   }
+            {
+                m_picker->removePickingConstraint(m_bulletworld->getDynamicsWorld());
+                if(m_bulletworld)
+                    delete m_bulletworld;
+                m_bulletworld=new BulletWorld;
+                createGround();
+                createCubes();
+                break;
+            }
         case '.':
-                   {
-                       m_shooter->shootBox(m_bulletworld, 
-                               m_camera->getCameraPosition(), 
-                               m_camera->getRayTo(x,y, m_glutScreenWidth, m_glutScreenHeight));
-                       break;
-                   }
-        case 'u' : enableTexture(!enableTexture(false));break;
+            {
+                m_shooter->shootBox(m_bulletworld, 
+                        m_camera->getCameraPosition(), 
+                        m_camera->getRayTo(x,y, m_glutScreenWidth, m_glutScreenHeight));
+                break;
+            }
+        case 'u' : 
+            enableTexture(!enableTexture(false));
+            break;
         case 'h':
-                   if (m_debugMode & btIDebugDraw::DBG_NoHelpText)
-                       m_debugMode = m_debugMode & (~btIDebugDraw::DBG_NoHelpText);
-                   else
-                       m_debugMode |= btIDebugDraw::DBG_NoHelpText;
-                   break;
-
+            if (m_debugMode & btIDebugDraw::DBG_NoHelpText){
+                m_debugMode = m_debugMode & (~btIDebugDraw::DBG_NoHelpText);
+            }
+            else{
+                m_debugMode |= btIDebugDraw::DBG_NoHelpText;
+            }
+            break;
         case 'w':
-                   if (m_debugMode & btIDebugDraw::DBG_DrawWireframe)
-                       m_debugMode = m_debugMode & (~btIDebugDraw::DBG_DrawWireframe);
-                   else
-                       m_debugMode |= btIDebugDraw::DBG_DrawWireframe;
-                   break;
-
+            if (m_debugMode & btIDebugDraw::DBG_DrawWireframe){
+                m_debugMode = m_debugMode & (~btIDebugDraw::DBG_DrawWireframe);
+            }
+            else{
+                m_debugMode |= btIDebugDraw::DBG_DrawWireframe;
+            }
+            break;
         case 'p':
-                   if (m_debugMode & btIDebugDraw::DBG_ProfileTimings)
-                       m_debugMode = m_debugMode & (~btIDebugDraw::DBG_ProfileTimings);
-                   else
-                       m_debugMode |= btIDebugDraw::DBG_ProfileTimings;
-                   break;
-
+            if (m_debugMode & btIDebugDraw::DBG_ProfileTimings){
+                m_debugMode = m_debugMode & (~btIDebugDraw::DBG_ProfileTimings);
+            }
+            else{
+                m_debugMode |= btIDebugDraw::DBG_ProfileTimings;
+            }
+            break;
         case 'm':
-                   if (m_debugMode & btIDebugDraw::DBG_EnableSatComparison)
-                       m_debugMode = m_debugMode & (~btIDebugDraw::DBG_EnableSatComparison);
-                   else
-                       m_debugMode |= btIDebugDraw::DBG_EnableSatComparison;
-                   break;
-
+            if (m_debugMode & btIDebugDraw::DBG_EnableSatComparison){
+                m_debugMode = m_debugMode & (~btIDebugDraw::DBG_EnableSatComparison);
+            }
+            else{
+                m_debugMode |= btIDebugDraw::DBG_EnableSatComparison;
+            }
+            break;
         case 'n':
-                   if (m_debugMode & btIDebugDraw::DBG_DisableBulletLCP)
-                       m_debugMode = m_debugMode & (~btIDebugDraw::DBG_DisableBulletLCP);
-                   else
-                       m_debugMode |= btIDebugDraw::DBG_DisableBulletLCP;
-                   break;
-
+            if (m_debugMode & btIDebugDraw::DBG_DisableBulletLCP){
+                m_debugMode = m_debugMode & (~btIDebugDraw::DBG_DisableBulletLCP);
+            }
+            else{
+                m_debugMode |= btIDebugDraw::DBG_DisableBulletLCP;
+            }
+            break;
         case 't' : 
-                   if (m_debugMode & btIDebugDraw::DBG_DrawText)
-                       m_debugMode = m_debugMode & (~btIDebugDraw::DBG_DrawText);
-                   else
-                       m_debugMode |= btIDebugDraw::DBG_DrawText;
-                   break;
+            if (m_debugMode & btIDebugDraw::DBG_DrawText){
+                m_debugMode = m_debugMode & (~btIDebugDraw::DBG_DrawText);
+            }
+            else{
+                m_debugMode |= btIDebugDraw::DBG_DrawText;
+            }
+            break;
         case 'y':		
-                   if (m_debugMode & btIDebugDraw::DBG_DrawFeaturesText)
-                       m_debugMode = m_debugMode & (~btIDebugDraw::DBG_DrawFeaturesText);
-                   else
-                       m_debugMode |= btIDebugDraw::DBG_DrawFeaturesText;
-                   break;
+            if (m_debugMode & btIDebugDraw::DBG_DrawFeaturesText){
+                m_debugMode = m_debugMode & (~btIDebugDraw::DBG_DrawFeaturesText);
+            }
+            else{
+                m_debugMode |= btIDebugDraw::DBG_DrawFeaturesText;
+            }
+            break;
         case 'a':	
-                   if (m_debugMode & btIDebugDraw::DBG_DrawAabb)
-                       m_debugMode = m_debugMode & (~btIDebugDraw::DBG_DrawAabb);
-                   else
-                       m_debugMode |= btIDebugDraw::DBG_DrawAabb;
-                   break;
+            if (m_debugMode & btIDebugDraw::DBG_DrawAabb){
+                m_debugMode = m_debugMode & (~btIDebugDraw::DBG_DrawAabb);
+            }
+            else{
+                m_debugMode |= btIDebugDraw::DBG_DrawAabb;
+            }
+            break;
         case 'c' : 
-                   if (m_debugMode & btIDebugDraw::DBG_DrawContactPoints)
-                       m_debugMode = m_debugMode & (~btIDebugDraw::DBG_DrawContactPoints);
-                   else
-                       m_debugMode |= btIDebugDraw::DBG_DrawContactPoints;
-                   break;
+            if (m_debugMode & btIDebugDraw::DBG_DrawContactPoints){
+                m_debugMode = m_debugMode & (~btIDebugDraw::DBG_DrawContactPoints);
+            }
+            else{
+                m_debugMode |= btIDebugDraw::DBG_DrawContactPoints;
+            }
+            break;
         case 'C' : 
-                   if (m_debugMode & btIDebugDraw::DBG_DrawConstraints)
-                       m_debugMode = m_debugMode & (~btIDebugDraw::DBG_DrawConstraints);
-                   else
-                       m_debugMode |= btIDebugDraw::DBG_DrawConstraints;
-                   break;
+            if (m_debugMode & btIDebugDraw::DBG_DrawConstraints){
+                m_debugMode = m_debugMode & (~btIDebugDraw::DBG_DrawConstraints);
+            }
+            else{
+                m_debugMode |= btIDebugDraw::DBG_DrawConstraints;
+            }
+            break;
         case 'L' : 
-                   if (m_debugMode & btIDebugDraw::DBG_DrawConstraintLimits)
-                       m_debugMode = m_debugMode & (~btIDebugDraw::DBG_DrawConstraintLimits);
-                   else
-                       m_debugMode |= btIDebugDraw::DBG_DrawConstraintLimits;
-                   break;
-
+            if (m_debugMode & btIDebugDraw::DBG_DrawConstraintLimits){
+                m_debugMode = m_debugMode & (~btIDebugDraw::DBG_DrawConstraintLimits);
+            }
+            else{
+                m_debugMode |= btIDebugDraw::DBG_DrawConstraintLimits;
+            }
+            break;
         case 'd' : 
-                   if (m_debugMode & btIDebugDraw::DBG_NoDeactivation)
-                       m_debugMode = m_debugMode & (~btIDebugDraw::DBG_NoDeactivation);
-                   else
-                       m_debugMode |= btIDebugDraw::DBG_NoDeactivation;
-                   if (m_debugMode & btIDebugDraw::DBG_NoDeactivation)
-                   {
-                       gDisableDeactivation = true;
-                   } else
-                   {
-                       gDisableDeactivation = false;
-                   }
-                   break;
-
+            if (m_debugMode & btIDebugDraw::DBG_NoDeactivation){
+                m_debugMode = m_debugMode & (~btIDebugDraw::DBG_NoDeactivation);
+            }
+            else{
+                m_debugMode |= btIDebugDraw::DBG_NoDeactivation;
+            }
+            if (m_debugMode & btIDebugDraw::DBG_NoDeactivation){
+                gDisableDeactivation = true;
+            } 
+            else {
+                gDisableDeactivation = false;
+            }
+            break;
         case '1':
-                   {
-                       if (m_debugMode & btIDebugDraw::DBG_EnableCCD)
-                           m_debugMode = m_debugMode & (~btIDebugDraw::DBG_EnableCCD);
-                       else
-                           m_debugMode |= btIDebugDraw::DBG_EnableCCD;
-                       break;
-                   }
+            if (m_debugMode & btIDebugDraw::DBG_EnableCCD){
+                m_debugMode = m_debugMode & (~btIDebugDraw::DBG_EnableCCD);
+            }
+            else{
+                m_debugMode |= btIDebugDraw::DBG_EnableCCD;
+            }
+            break;
         case '+':
-            {
-                m_shooter->setShootInitialSpeed(
-                        m_shooter->getShootInitialSpeed() + 10.f);
-                break;
-            }
+            m_shooter->setShootInitialSpeed(
+                    m_shooter->getShootInitialSpeed() + 10.f);
+            break;
         case '-':
-            {
-                m_shooter->setShootInitialSpeed(
-                        m_shooter->getShootInitialSpeed() - 10.f);
-                break;
-            }
+            m_shooter->setShootInitialSpeed(
+                    m_shooter->getShootInitialSpeed() - 10.f);
+            break;
         case '=':
-            {
-                m_bulletworld->serialize();
-                break;
-            }
-
+            m_bulletworld->serialize();
+            break;
         default:
-                   //        std::cout << "unused key : " << key << std::endl;
-                   break;
+            //        std::cout << "unused key : " << key << std::endl;
+            break;
     }
 
     if (m_bulletworld->getDynamicsWorld() && 
