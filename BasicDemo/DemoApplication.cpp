@@ -352,13 +352,20 @@ void DemoApplication::mouseFunc(int button, int state, int x, int y)
             {
                 if (state==0) {
                     // Down
-                    btVector3 rayTo=m_camera->getRayTo(
-                            x, y, m_glutScreenWidth, m_glutScreenHeight);
-                    btVector3 rayFrom=m_camera->getOrtho()
-                        ? btVector3(rayTo[0], rayTo[1], 1000.0f)
-                        : m_camera->getCameraPosition();
-                    m_picker->pickStart(m_bulletworld->getDynamicsWorld(), 
-                            rayFrom, rayTo);
+                    if(m_camera->getOrtho()){
+                        btVector3 rayTo=m_camera->getRayTo(
+                                x, y, m_glutScreenWidth, m_glutScreenHeight);
+                        m_picker->pickStart(m_bulletworld->getDynamicsWorld(), 
+                                btVector3(rayTo[0], rayTo[1], -1000.0f),
+                                btVector3(rayTo[0], rayTo[1], 1000.0f));
+                    }
+                    else{
+                        btVector3 rayTo=m_camera->getRayTo(
+                                x, y, m_glutScreenWidth, m_glutScreenHeight);
+                        btVector3 rayFrom=m_camera->getCameraPosition();
+                        m_picker->pickStart(m_bulletworld->getDynamicsWorld(), 
+                                rayFrom, rayTo);
+                    }
                 }
                 else {
                     // Up
