@@ -46,7 +46,7 @@ public:
     {
         return m_dynamicsWorld;
     }
-    void update(btScalar d);
+    void onUpdate(btScalar d);
     btRigidBody* localCreateRigidBody(float mass, 
             const btTransform& startTransform,btCollisionShape* shape);
     void removeLastObject();

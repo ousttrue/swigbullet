@@ -40,7 +40,9 @@ class DemoApplication
     Texture *m_texture;
     int m_mouseOldX;
     int m_mouseOldY;
-    int m_mouseButtons;
+    bool m_leftDown;;
+    bool m_middleDown;;
+    bool m_rightDown;;
     float m_scaleBottom;
     float m_scaleFactor;
     bool m_stepping;
@@ -53,23 +55,11 @@ class DemoApplication
     bool m_textureenabled;
     int m_glutScreenWidth;
     int m_glutScreenHeight;
-#ifdef USE_BT_CLOCK
-    btClock m_clock;
-#endif //USE_BT_CLOCK
+    bool m_initialized;
 
 public:
     DemoApplication();
     virtual ~DemoApplication();
-    btScalar getDeltaTimeMicroseconds()
-    {
-#ifdef USE_BT_CLOCK
-        btScalar dt = (btScalar)m_clock.getTimeMicroseconds();
-        m_clock.reset();
-        return dt;
-#else
-        return btScalar(16666.);
-#endif
-    }
     void createGround();
     void createCubes();
     void setDebugMode(int mode)
@@ -103,18 +93,20 @@ public:
     }
 
     // glut interface
-    void keyboardCallback(unsigned char key, int x, int y);
-    void keyboardUpCallback(unsigned char key, int x, int y) {}
-    void specialKeyboard(int key, int x, int y);
-    void specialKeyboardUp(int key, int x, int y){}
-    void reshape(int w, int h);
-    void update();
-    void mouseFunc(int button, int state, int x, int y);
-    void mouseMotionFunc(int x,int y);
-    void displayCallback();
+    void onKeyDown(unsigned char key);
+    void onResize(int w, int h);
+    void onUpdate(btScalar ms);
+    bool onLeftDown(int x, int y);
+    bool onLeftUp(int x, int y);
+    bool onMiddleDown(int x, int y);
+    bool onMiddleUp(int x, int y);
+    bool onRightDown(int x, int y);
+    bool onRightUp(int x, int y);
+    void onMotion(int x,int y);
+    void onDraw();
 
 private:
-    void myinit();
+    void onInitialize();
 };
 
 #endif //DEMO_APPLICATION_H

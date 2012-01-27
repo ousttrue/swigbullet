@@ -36,7 +36,8 @@ View::View()
     :
         position(0.0, 0.0, 0.0),
         target(0.0, 0.0, 0.0),
-        up(0.0, 1.0, 0.0)
+        up(0.0, 1.0, 0.0),
+        w(1), h(1)
 {
 }
 
@@ -51,13 +52,13 @@ void View::draw()
 }
 
 
-btVector3 View::getRayTo(int x,int y, int w, int h)
+btVector3 View::getRayTo(int x,int y)
 {
     float top = 1.f;
     float bottom = -1.f;
     float nearPlane = 1.f;
     float tanFov = (top-bottom)*0.5f / nearPlane;
-    float fov = btScalar(2.0) * btAtan(tanFov);
+    float fov = 2.0f * btAtan(tanFov);
 
     btVector3 rayFrom = position;
     btVector3 rayForward = target-position;
@@ -78,7 +79,7 @@ btVector3 View::getRayTo(int x,int y, int w, int h)
     hor *= 2.f * farPlane * tanfov;
     vertical *= 2.f * farPlane * tanfov;
 
-    hor*=(w / (btScalar)h);
+    hor*=(w / btScalar(h));
 
     btVector3 rayToCenter = rayFrom + rayForward;
     btVector3 dHor = hor * 1.f/btScalar(w);
@@ -103,14 +104,13 @@ Camera::Camera()
 }
 
 
-void Camera::move(int dx, int dy, int w, int h)
+void Camera::move(int dx, int dy)
 {
-    btVector3 hor = m_view.getRayTo(0,0, w, h)-m_view.getRayTo(1,0, w, h);
-    btVector3 vert = m_view.getRayTo(0,0, w, h)-m_view.getRayTo(0,1, w, h);
-    m_view.target += hor* dx * btScalar(0.001);
-    m_view.target += vert* dy * btScalar(0.001);
+    btVector3 hor = m_view.getRayTo(0, 0)-m_view.getRayTo(1, 0);
+    btVector3 vert = m_view.getRayTo(0, 0)-m_view.getRayTo(0, 1);
+    m_view.target += hor* dx * 0.001f;
+    m_view.target += vert* dy * 0.001f;
 }
-
 
 
 void Camera::draw()
@@ -128,7 +128,6 @@ void setOrthographicProjection(int w, int h)
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluOrtho2D(0, w, 0, h);
-
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     // invert the y axis, down is positive

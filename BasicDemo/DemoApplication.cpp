@@ -35,7 +35,10 @@ DemoApplication::DemoApplication()
     :
         m_mouseOldX(0),
         m_mouseOldY(0),
-        m_mouseButtons(0),
+        m_leftDown(false),
+        m_middleDown(false),
+        m_rightDown(false),
+
         m_scaleBottom(0.5f),
         m_scaleFactor(2.f),
         m_stepping(true),
@@ -47,7 +50,8 @@ DemoApplication::DemoApplication()
         m_sundirection(btVector3(1,-2,1)*1000),
         m_glutScreenWidth(1),
         m_glutScreenHeight(1),
-        m_textureenabled(true)
+        m_textureenabled(true),
+        m_initialized(false)
 {
     // bullet
     m_bulletworld=new BulletWorld();
@@ -87,7 +91,13 @@ DemoApplication::~DemoApplication()
 }
 
 
-void DemoApplication::myinit(void)
+void DemoApplication::onUpdate(btScalar ms)
+{
+    m_bulletworld->onUpdate(ms);
+}
+
+
+void DemoApplication::onInitialize()
 {
     static GLfloat light_ambient[] = { btScalar(0.2), btScalar(0.2), btScalar(0.2), btScalar(1.0) };
     static GLfloat light_diffuse[] = { btScalar(1.0), btScalar(1.0), btScalar(1.0), btScalar(1.0) };
@@ -110,28 +120,28 @@ void DemoApplication::myinit(void)
     glEnable(GL_LIGHT0);
     glEnable(GL_LIGHT1);
 
-
     glShadeModel(GL_SMOOTH);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
     glClearColor(btScalar(0.7),btScalar(0.7),btScalar(0.7),btScalar(0));
+
+    m_initialized=true;
 }
 
 
-void DemoApplication::reshape(int w, int h)
+void DemoApplication::onResize(int w, int h)
 {
     glViewport(0, 0, w, h);
-    m_profiler->resize(w, h);
-    m_camera->reshape(w, h);
+    m_camera->resize(w, h);
     m_glutScreenWidth = w;
     m_glutScreenHeight = h;
 }
 
 
-void DemoApplication::keyboardCallback(unsigned char key, int x, int y)
+void DemoApplication::onKeyDown(unsigned char key)
 {
-    m_profiler->keyboardCallback(key, x, y);
+    m_profiler->keyboardCallback(key, m_mouseOldX, m_mouseOldY);
 
     switch (key)
     {
@@ -160,7 +170,7 @@ void DemoApplication::keyboardCallback(unsigned char key, int x, int y)
             toggleShadow();
             break;
         case 's' :
-            m_bulletworld->update(getDeltaTimeMicroseconds());
+            m_bulletworld->onUpdate(16666.);
             break;
         case ' ':
             {
@@ -176,8 +186,7 @@ void DemoApplication::keyboardCallback(unsigned char key, int x, int y)
             {
                 m_shooter->shootBox(m_bulletworld, 
                         m_camera->m_view.position, 
-                        m_camera->m_view.getRayTo(x, y, 
-                            m_glutScreenWidth, m_glutScreenHeight));
+                        m_camera->m_view.getRayTo(m_mouseOldX, m_mouseOldY));
                 break;
             }
         case 'u' : 
@@ -318,89 +327,75 @@ void DemoApplication::keyboardCallback(unsigned char key, int x, int y)
 }
 
 
-void DemoApplication::mouseFunc(int button, int state, int x, int y)
+bool DemoApplication::onLeftDown(int x, int y)
 {
-    m_mouseOldX = x;
-    m_mouseOldY = y;
-
-    if (state == 0) {
-        m_mouseButtons |= 1<<button;
+    m_leftDown=true;
+    if(m_active_alt){
+        return false;
     }
-    else {
-        m_mouseButtons = 0;
-    }
-
-    if (m_active_alt && (state==0)) {
-        // do nothing
-        return;
-    }
-
-    switch (button)
-    {
-        case 0:
-            // left
-            {
-                if (state==0) {
-                    // Down
-                    m_picker->pickStart(m_bulletworld->getDynamicsWorld(), 
-                            m_camera->m_view.position, 
-                            m_camera->m_view.getRayTo(x, y, 
-                                m_glutScreenWidth, m_glutScreenHeight));
-                }
-                else {
-                    // Up
-                    m_picker->removePickingConstraint(m_bulletworld->getDynamicsWorld());
-                }
-                break;
-            }
-
-        case 1:
-            // middle
-            break;
-
-        case 2:
-            // right
-            {
-                if (state==0) {
-                    // Down
-                    m_shooter->shootBox(m_bulletworld, 
-                            m_camera->m_view.position, 
-                            m_camera->m_view.getRayTo(x, y, 
-                                m_glutScreenWidth, m_glutScreenHeight));
-                }
-                break;
-            }
-
-        default:
-            break;
-    }
+    m_picker->pickStart(m_bulletworld->getDynamicsWorld(), 
+            m_camera->m_view.position, 
+            m_camera->m_view.getRayTo(x, y));
+    return true;
 }
 
 
-void DemoApplication::mouseMotionFunc(int x,int y)
+bool DemoApplication::onLeftUp(int x, int y)
+{
+    m_leftDown=false;
+    m_picker->removePickingConstraint(m_bulletworld->getDynamicsWorld());
+    return true;
+}
+
+
+bool DemoApplication::onMiddleDown(int x, int y)
+{
+    m_middleDown=true;
+    return false;
+}
+
+
+bool DemoApplication::onMiddleUp(int x, int y)
+{
+    m_middleDown=false;
+    return false;
+}
+
+
+bool DemoApplication::onRightDown(int x, int y)
+{
+    m_rightDown=true;
+    m_shooter->shootBox(m_bulletworld, 
+            m_camera->m_view.position, 
+            m_camera->m_view.getRayTo(x, y));
+    return true;
+}
+
+
+bool DemoApplication::onRightUp(int x, int y)
+{
+    m_rightDown=false;
+    return false;
+}
+
+
+void DemoApplication::onMotion(int x,int y)
 {
     m_picker->pick(m_bulletworld->getDynamicsWorld(), 
             m_camera->m_view.position,
-            m_camera->m_view.getRayTo(x, y, 
-                m_glutScreenWidth, m_glutScreenHeight));
+            m_camera->m_view.getRayTo(x, y));
 
     if (m_active_alt) {
         int dx = x - m_mouseOldX;
         int dy = y - m_mouseOldY;
         ///only if ALT key is pressed (Maya style)
-        if(m_mouseButtons & 2) {
-            // middle
-            m_camera->move(dx, dy, m_glutScreenWidth, m_glutScreenHeight);
+        if(m_middleDown) {
+            m_camera->move(dx, dy);
         }
-        if(m_mouseButtons & (2 << 2) && m_mouseButtons & 1) {
-            // ?
-        }
-        if(m_mouseButtons & 1) {
-            // left
+        if(m_leftDown) {
             m_camera->rot(dx, dy);
         }
-        if(m_mouseButtons & 4) {
-            // right
+        if(m_rightDown) {
             m_camera->dolly(dy);
         }
     }
@@ -410,9 +405,11 @@ void DemoApplication::mouseMotionFunc(int x,int y)
 }
 
 
-void DemoApplication::displayCallback(void)
+void DemoApplication::onDraw()
 {
-    myinit();
+    if(!m_initialized){
+        onInitialize();
+    }
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // reset matrix
     glMatrixMode(GL_PROJECTION);
@@ -446,7 +443,8 @@ void DemoApplication::displayCallback(void)
         glPushMatrix();
 
         setOrthographicProjection(m_glutScreenWidth, m_glutScreenHeight);
-        m_profiler->render(m_bulletworld->isIdle(), getDebugMode());
+        m_profiler->render(m_bulletworld->isIdle(), getDebugMode(),
+                m_glutScreenWidth, m_glutScreenHeight);
 
         // restore
         glMatrixMode(GL_PROJECTION);
@@ -516,6 +514,4 @@ void DemoApplication::createCubes()
         }
     }
 }
-
-
 

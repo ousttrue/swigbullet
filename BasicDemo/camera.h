@@ -21,8 +21,10 @@ struct View
     btVector3 position;
     btVector3 target;
     btVector3 up;
+    int w;
+    int h;
     View();
-    btVector3 getRayTo(int x,int y, int w, int h);
+    btVector3 getRayTo(int x,int y);
     void draw();
 };
 
@@ -95,8 +97,10 @@ public:
         m_cameraDistance -= dy * btScalar(0.02f);
         update();
     }
-    void reshape(int w, int h)
+    void resize(int w, int h)
     {
+        m_view.w=w;
+        m_view.h=h;
         m_projection.aspect= w / (btScalar)h;
         update();
     }
@@ -135,7 +139,7 @@ public:
         m_view.position=m_view.target+btMatrix3x3(head)*btMatrix3x3(pitch)*eyePos;
     }
 
-    void move(int dx, int dy, int w, int h);
+    void move(int dx, int dy);
     void draw();
 };
 

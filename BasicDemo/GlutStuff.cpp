@@ -23,6 +23,19 @@ static DemoApplication* gDemoApplication = 0;
 #include <iostream>
 
 
+static btScalar getDeltaTimeMicroseconds()
+{
+#ifdef USE_BT_CLOCK
+    static btClock m_clock;
+    btScalar dt = (btScalar)m_clock.getTimeMicroseconds();
+    m_clock.reset();
+    return dt;
+#else
+    return btScalar(16666.);
+#endif
+}
+
+
 static	void glutKeyboardCallback(unsigned char key, int x, int y)
 {
     if(key=='q'){
@@ -34,12 +47,11 @@ static	void glutKeyboardCallback(unsigned char key, int x, int y)
             exit(0);
 #endif
     }
-    gDemoApplication->keyboardCallback(key,x,y);
+    gDemoApplication->onKeyDown(key);
 }
 
 static	void glutKeyboardUpCallback(unsigned char key, int x, int y)
 {
-    gDemoApplication->keyboardUpCallback(key,x,y);
 }
 
 static void glutSpecialKeyboardCallback(int key, int x, int y)
@@ -83,18 +95,16 @@ static void glutSpecialKeyboardCallback(int key, int x, int y)
 
 static void glutSpecialKeyboardUpCallback(int key, int x, int y)
 {
-    gDemoApplication->specialKeyboardUp(key,x,y);
 }
 
 static void glutReshapeCallback(int w, int h)
 {
-    gDemoApplication->reshape(w,h);
+    gDemoApplication->onResize(w,h);
 }
 
 static void glutUpdate()
 {
-    gDemoApplication->getBulletWorld()->update(
-            gDemoApplication->getDeltaTimeMicroseconds());
+    gDemoApplication->onUpdate(getDeltaTimeMicroseconds());
     glutPostRedisplay();
 }
 
@@ -109,17 +119,48 @@ static void glutMouseFuncCallback(int button, int state, int x, int y)
        modifierKeys |= BT_ACTIVE_SHIFT;
     gDemoApplication->setModifierKeys(modifierKeys);
     gDemoApplication->setActiveAlt(modifierKeys& BT_ACTIVE_ALT);
-    gDemoApplication->mouseFunc(button,state,x,y);
+    switch(button)
+    {
+        case GLUT_LEFT_BUTTON:
+            // left
+            if(state==GLUT_DOWN){
+                gDemoApplication->onLeftDown(x, y);
+            }
+            else{
+                gDemoApplication->onLeftUp(x, y);
+            }
+            break;
+        case GLUT_MIDDLE_BUTTON:
+            // middle
+            if(state==GLUT_DOWN){
+                gDemoApplication->onMiddleDown(x, y);
+            }
+            else{
+                gDemoApplication->onMiddleUp(x, y);
+            }
+            break;
+        case GLUT_RIGHT_BUTTON: 
+            // right
+            if(state==GLUT_DOWN){
+                gDemoApplication->onRightDown(x, y);
+            }
+            else{
+                gDemoApplication->onRightUp(x, y);
+            }
+            break;
+        default:
+            std::cout << "unknown button: " << button << std::endl;
+    }
 }
 
 static void	glutMotionFuncCallback(int x,int y)
 {
-    gDemoApplication->mouseMotionFunc(x,y);
+    gDemoApplication->onMotion(x,y);
 }
 
 static void glutDisplayCallback(void)
 {
-    gDemoApplication->displayCallback();
+    gDemoApplication->onDraw();
     glutSwapBuffers();
 }
 

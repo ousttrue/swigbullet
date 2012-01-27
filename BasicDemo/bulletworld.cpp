@@ -103,7 +103,7 @@ btRigidBody* BulletWorld::localCreateRigidBody(float mass,
 }
 
 
-void BulletWorld::update(btScalar ms)
+void BulletWorld::onUpdate(btScalar ms)
 {
     if(m_idle){
         return;

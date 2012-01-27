@@ -11,6 +11,7 @@
 
 
 Profiler::Profiler()
+    : m_w(0), m_h(0)
 {
 #ifndef BT_NO_PROFILE
     m_profileIterator = CProfileManager::Get_Iterator();
@@ -46,8 +47,18 @@ static void displayProfileString(int xOffset,int yStart,char* message)
 }
 
 
-void Profiler::showProfileInfo(bool isIdle, int& xOffset,int& yStart, int yIncr)
+void Profiler::showProfileInfo(bool isIdle, int& xOffset,int& yStart, int yIncr,
+        int w, int h)
 {
+    if(m_w!=w || m_h!=h){
+        if(w==0 || h==0){
+            return;
+        }
+        GLDebugResetFont(w,h);
+        m_w=w;
+        m_h=h;
+    }
+
 #ifndef BT_NO_PROFILE
     static double time_since_reset = 0.f;
     if (!isIdle)
@@ -114,7 +125,7 @@ void Profiler::showProfileInfo(bool isIdle, int& xOffset,int& yStart, int yIncr)
 }
 
 
-void Profiler::render(bool isIdle, int debugMode)
+void Profiler::render(bool isIdle, int debugMode, int w, int h)
 {
     glDisable(GL_LIGHTING);
     glColor3f(0, 0, 0);
@@ -122,7 +133,7 @@ void Profiler::render(bool isIdle, int debugMode)
     int yStart = 20;
     int yIncr = 20;
     if ((debugMode & btIDebugDraw::DBG_NoHelpText)==0) {
-        showProfileInfo(isIdle, xOffset,yStart,yIncr);
+        showProfileInfo(isIdle, xOffset,yStart,yIncr, w, h);
 #ifdef USE_QUICKPROF
         if ( debugMode & btIDebugDraw::DBG_ProfileTimings) {
             static int counter = 0;
@@ -144,10 +155,5 @@ void Profiler::render(bool isIdle, int debugMode)
         }
 #endif //USE_QUICKPROF
     }
-}
-
-void Profiler::resize(int w, int h)
-{
-    GLDebugResetFont(w,h);
 }
 
