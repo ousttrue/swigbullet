@@ -54,8 +54,18 @@ def sub_module(name):
 
 setup (name = 'swigbullet',
         version = '2.79-1',
-        author      = "ousttrue",
         description = """python binding of bullet by swig""",
+        long_description=open('../../README.rst').read(),
+        classifiers=[
+            'Programming Language :: Python :: 2',
+            'License :: OSI Approved :: zlib/libpng License',
+            ],
+        keywords=['bullet'],
+        author='ousttrue',
+        author_email='ousttrue@gmail.com',
+        license='zlib',
+        install_requires=[
+            ],
         ext_modules = [
             sub_module('__init__'),
             ],
