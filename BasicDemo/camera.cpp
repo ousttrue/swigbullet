@@ -9,34 +9,49 @@
 #include <iostream>
 
 
-
-Camera::Camera()
+Projection::Projection()
     :
-        m_ele(20.f),
-        m_azi(0.f),
-        m_cameraPosition(0.f,0.f,0.f),
-        m_cameraTargetPosition(0.f,0.f,0.f),
-        m_cameraUp(0,1,0),
-        m_zoomStepSize(0.4), 
-        m_stepSize(5.0),
-        m_cameraDistance(50.0),
-        m_frustumZNear(1.f),
-        m_frustumZFar(10000.f)
+        zNear(1.0f),
+        zFar(10000.0f),
+        aspect(1.0f)
 {
-    update();
 }
 
 
-void PerspectiveCamera::move(int dx, int dy, int w, int h)
+void Projection::draw()
 {
-    btVector3 hor = getRayTo(0,0, w, h)-getRayTo(1,0, w, h);
-    btVector3 vert = getRayTo(0,0, w, h)-getRayTo(0,1, w, h);
-    m_cameraTargetPosition += hor* dx * btScalar(0.001);
-    m_cameraTargetPosition += vert* dy * btScalar(0.001);
+    btVector3 extents(aspect, 1.0f, 0.0f);
+    glMatrixMode(GL_PROJECTION);
+    glFrustum (
+            -aspect * zNear, 
+            aspect * zNear, 
+            -zNear, 
+            zNear, 
+            zNear, 
+            zFar);
 }
 
 
-btVector3 PerspectiveCamera::getRayTo(int x,int y, int w, int h)
+View::View()
+    :
+        position(0.0, 0.0, 0.0),
+        target(0.0, 0.0, 0.0),
+        up(0.0, 1.0, 0.0)
+{
+}
+
+
+void View::draw()
+{
+    glMatrixMode(GL_MODELVIEW);
+    gluLookAt(
+            position[0], position[1], position[2], 
+            target[0], target[1], target[2], 
+            up.getX(), up.getY(), up.getZ());
+}
+
+
+btVector3 View::getRayTo(int x,int y, int w, int h)
 {
     float top = 1.f;
     float bottom = -1.f;
@@ -44,18 +59,17 @@ btVector3 PerspectiveCamera::getRayTo(int x,int y, int w, int h)
     float tanFov = (top-bottom)*0.5f / nearPlane;
     float fov = btScalar(2.0) * btAtan(tanFov);
 
-    btVector3 rayFrom = getCameraPosition();
-    btVector3 rayForward = (getCameraTargetPosition()-getCameraPosition());
+    btVector3 rayFrom = position;
+    btVector3 rayForward = target-position;
     rayForward.normalize();
     float farPlane = 10000.f;
     rayForward*= farPlane;
 
-    btVector3 rightOffset;
-    btVector3 vertical = m_cameraUp;
+    btVector3 vertical = up;
 
-    btVector3 hor;
-    hor = rayForward.cross(vertical);
+    btVector3 hor = rayForward.cross(vertical);
     hor.normalize();
+
     vertical = hor.cross(rayForward);
     vertical.normalize();
 
@@ -64,7 +78,7 @@ btVector3 PerspectiveCamera::getRayTo(int x,int y, int w, int h)
     hor *= 2.f * farPlane * tanfov;
     vertical *= 2.f * farPlane * tanfov;
 
-    hor*=m_aspect;
+    hor*=(w / (btScalar)h);
 
     btVector3 rayToCenter = rayFrom + rayForward;
     btVector3 dHor = hor * 1.f/btScalar(w);
@@ -77,29 +91,32 @@ btVector3 PerspectiveCamera::getRayTo(int x,int y, int w, int h)
 }
 
 
-void PerspectiveCamera::draw()
+Camera::Camera()
+    :
+        m_ele(20.f),
+        m_azi(0.f),
+        m_cameraDistance(50.0),
+        m_zoomStepSize(0.4), 
+        m_stepSize(5.0)
 {
-    btVector3 extents(m_aspect * 1.0f, 1.0f,0);
-    glMatrixMode(GL_PROJECTION);
-    // glFrustum (-m_aspect, m_aspect, -1.0, 1.0, 1.0, 10000.0);
-    glFrustum (
-            -m_aspect * m_frustumZNear, 
-            m_aspect * m_frustumZNear, 
-            -m_frustumZNear, 
-            m_frustumZNear, 
-            m_frustumZNear, 
-            m_frustumZFar);
-    glMatrixMode(GL_MODELVIEW);
-    gluLookAt(
-            m_cameraPosition[0], 
-            m_cameraPosition[1], 
-            m_cameraPosition[2], 
-            m_cameraTargetPosition[0], 
-            m_cameraTargetPosition[1], 
-            m_cameraTargetPosition[2], 
-            m_cameraUp.getX(),
-            m_cameraUp.getY(),
-            m_cameraUp.getZ());
+    update();
+}
+
+
+void Camera::move(int dx, int dy, int w, int h)
+{
+    btVector3 hor = m_view.getRayTo(0,0, w, h)-m_view.getRayTo(1,0, w, h);
+    btVector3 vert = m_view.getRayTo(0,0, w, h)-m_view.getRayTo(0,1, w, h);
+    m_view.target += hor* dx * btScalar(0.001);
+    m_view.target += vert* dy * btScalar(0.001);
+}
+
+
+
+void Camera::draw()
+{
+    m_projection.draw();
+    m_view.draw();
 }
 
 

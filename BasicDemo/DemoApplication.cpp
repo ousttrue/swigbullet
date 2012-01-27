@@ -56,7 +56,7 @@ DemoApplication::DemoApplication()
     createGround();
     createCubes();
     // opengl
-    m_camera=new PerspectiveCamera();
+    m_camera=new Camera();
     m_texture=new Texture;
 
     m_profiler=new Profiler;
@@ -175,8 +175,9 @@ void DemoApplication::keyboardCallback(unsigned char key, int x, int y)
         case '.':
             {
                 m_shooter->shootBox(m_bulletworld, 
-                        m_camera->getCameraPosition(), 
-                        m_camera->getRayTo(x,y, m_glutScreenWidth, m_glutScreenHeight));
+                        m_camera->m_view.position, 
+                        m_camera->m_view.getRayTo(x, y, 
+                            m_glutScreenWidth, m_glutScreenHeight));
                 break;
             }
         case 'u' : 
@@ -341,11 +342,10 @@ void DemoApplication::mouseFunc(int button, int state, int x, int y)
             {
                 if (state==0) {
                     // Down
-                    btVector3 rayTo=m_camera->getRayTo(
-                            x, y, m_glutScreenWidth, m_glutScreenHeight);
-                    btVector3 rayFrom=m_camera->getCameraPosition();
                     m_picker->pickStart(m_bulletworld->getDynamicsWorld(), 
-                            rayFrom, rayTo);
+                            m_camera->m_view.position, 
+                            m_camera->m_view.getRayTo(x, y, 
+                                m_glutScreenWidth, m_glutScreenHeight));
                 }
                 else {
                     // Up
@@ -364,8 +364,9 @@ void DemoApplication::mouseFunc(int button, int state, int x, int y)
                 if (state==0) {
                     // Down
                     m_shooter->shootBox(m_bulletworld, 
-                            m_camera->getCameraPosition(), 
-                            m_camera->getRayTo(x,y, m_glutScreenWidth, m_glutScreenHeight));
+                            m_camera->m_view.position, 
+                            m_camera->m_view.getRayTo(x, y, 
+                                m_glutScreenWidth, m_glutScreenHeight));
                 }
                 break;
             }
@@ -379,8 +380,9 @@ void DemoApplication::mouseFunc(int button, int state, int x, int y)
 void DemoApplication::mouseMotionFunc(int x,int y)
 {
     m_picker->pick(m_bulletworld->getDynamicsWorld(), 
-            m_camera->getCameraPosition(),
-            m_camera->getRayTo(x, y, m_glutScreenWidth, m_glutScreenHeight));
+            m_camera->m_view.position,
+            m_camera->m_view.getRayTo(x, y, 
+                m_glutScreenWidth, m_glutScreenHeight));
 
     if (m_active_alt) {
         int dx = x - m_mouseOldX;

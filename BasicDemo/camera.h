@@ -7,50 +7,42 @@
 #include "LinearMath/btMatrix3x3.h"
 
 
+struct Projection
+{
+    float aspect;
+    float zNear;
+    float zFar;
+    Projection();
+    void draw();
+};
+
+struct View
+{
+    btVector3 position;
+    btVector3 target;
+    btVector3 up;
+    View();
+    btVector3 getRayTo(int x,int y, int w, int h);
+    void draw();
+};
+
 class Camera
 {
-protected:
-    // euler angle
     float m_ele;
     float m_azi;
-
-    btVector3 m_cameraPosition;
-    //look at
-    btVector3 m_cameraTargetPosition;
-    btVector3 m_cameraUp;
+    float m_cameraDistance;
 
     float m_stepSize;
     float m_zoomStepSize;
-    float m_cameraDistance;
-
-    // projection
-    float m_aspect;
-    float m_frustumZNear;
-    float m_frustumZFar;
 
 public:
+    View m_view;
+    Projection m_projection;
+
     Camera();
-    virtual ~Camera(){}
     void setAzi(float azi)
     {
         m_azi = azi;
-    }
-    void setCameraUp(const btVector3& camUp)
-    {
-        m_cameraUp = camUp;
-    }
-    btVector3 getCameraPosition()
-    {
-        return m_cameraPosition;
-    }
-    btVector3 getCameraTargetPosition()
-    {
-        return m_cameraTargetPosition;
-    }
-    void setFrustumZPlanes(float zNear, float zFar)
-    {
-        m_frustumZNear = zNear;
-        m_frustumZFar = zFar;
     }
     void setCameraDistance(float dist)
     {
@@ -105,7 +97,7 @@ public:
     }
     void reshape(int w, int h)
     {
-        m_aspect= w / (btScalar)h;
+        m_projection.aspect= w / (btScalar)h;
         update();
     }
     void update()
@@ -129,32 +121,22 @@ public:
 
         // calc camera position
         btScalar razi = m_azi * btScalar(0.01745329251994329547);// rads per deg
-        btQuaternion head(m_cameraUp, razi);
+        btQuaternion head(m_view.up, razi);
 
         btVector3 eyePos(0.0f, 0.0f, -m_cameraDistance);
         btVector3 forward=eyePos;
         if (forward.length2() < SIMD_EPSILON) {
             forward.setValue(1.0f, 0.0f, 0.0f);
         }
-        btVector3 right=m_cameraUp.cross(forward);
+        btVector3 right=m_view.up.cross(forward);
         btScalar rele = m_ele * btScalar(0.01745329251994329547);// rads per deg
         btQuaternion pitch(right, -rele);
 
-        m_cameraPosition=btMatrix3x3(head)*btMatrix3x3(pitch)*eyePos + m_cameraTargetPosition;
+        m_view.position=m_view.target+btMatrix3x3(head)*btMatrix3x3(pitch)*eyePos;
     }
 
-    virtual void move(int dx, int dy, int w, int h)=0;
-    virtual btVector3 getRayTo(int x,int y, int w, int h)=0;
-    virtual void draw()=0;
-};
-
-
-class PerspectiveCamera : public Camera
-{
-public:
-    virtual void move(int dx, int dy, int w, int h);
-    virtual btVector3 getRayTo(int x,int y, int w, int h);
-    virtual void draw();
+    void move(int dx, int dy, int w, int h);
+    void draw();
 };
 
 
