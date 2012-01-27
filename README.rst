@@ -23,6 +23,7 @@ MIT license.
 BasicDemo
 ---------
 based bullet-2.79/Demos/BasicDemo.
+depend on freeglut.
 
 gldrawer
 --------
@@ -31,14 +32,14 @@ based bullet-2.79/Demos/OpenGL.
 
 swigbullet
 ----------
-bullet wrapper by swing.
+bullet wrapper by swig.
 
 build on Windows
 ================
 
 0. requirement
 --------------
-on msys
+on msys shell
 
 ::
 
