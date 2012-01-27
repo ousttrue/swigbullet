@@ -1,24 +1,17 @@
 #ifndef BULLET_WORLD_H
 #define BULLET_WORLD_H
 
-#include "LinearMath/btVector3.h"
-#include "LinearMath/btMatrix3x3.h"
-#include "LinearMath/btTransform.h"
-#include "LinearMath/btQuickprof.h"
 #include "LinearMath/btAlignedObjectArray.h"
-
-
-class	btCollisionShape;
-class	btDynamicsWorld;
-class	btRigidBody;
-class	btTypedConstraint;
+class btCollisionShape;
+class btDynamicsWorld;
+class btRigidBody;
 class btBroadphaseInterface;
-class btOverlappingPairCache;
+//class btOverlappingPairCache;
 class btCollisionDispatcher;
 class btConstraintSolver;
-struct btCollisionAlgorithmCreateFunc;
+//struct btCollisionAlgorithmCreateFunc;
 class btDefaultCollisionConfiguration;
-class Camera;
+class btTransform;
 
 
 class BulletWorld
@@ -31,21 +24,11 @@ class BulletWorld
 	btDefaultCollisionConfiguration* m_collisionConfiguration;
     ///this is the most important class
     btDynamicsWorld* m_dynamicsWorld;
-    ///constraint for mouse picking
-    btTypedConstraint* m_pickConstraint;
-    btRigidBody* pickedBody;
 #ifdef USE_BT_CLOCK
     btClock m_clock;
 #endif //USE_BT_CLOCK
-
     btScalar m_defaultContactProcessingThreshold;
     bool m_idle;
-    bool use6Dof;
-    btScalar mousePickClamping;
-    int gPickingConstraintId;
-    btVector3 gOldPickingPos;
-    btVector3 gHitPos;
-    float gOldPickingDist;
 
 public:
     BulletWorld();
@@ -71,9 +54,6 @@ public:
         return btScalar(16666.);
 #endif
     }
-    void pickStart(Camera *camera, int x, int y);
-    void pick(Camera *camera, int x, int y);
-    void removePickingConstraint();
     void update();
     void debugDraw();
     void clientResetScene();

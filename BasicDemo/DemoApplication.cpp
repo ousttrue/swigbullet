@@ -16,6 +16,7 @@
 #include "camera.h"
 #include "bulletworld.h"
 #include "bulletshooter.h"
+#include "bulletpicker.h"
 #include "profiler.h"
 #include "GL_ShapeDrawer.h"
 #include "texture.h"
@@ -48,6 +49,7 @@ DemoApplication::DemoApplication()
 {
     m_bulletworld=new BulletWorld();
     m_shooter=new BulletShooter();
+    m_picker=new BulletPicker();
     m_camera=new Camera();
     m_camera->setCameraDistance(btScalar(50.));
     m_profiler=new Profiler;
@@ -63,6 +65,8 @@ DemoApplication::~DemoApplication()
         delete m_profiler;
     if(m_camera)
         delete m_camera;
+    if(m_picker)
+        delete m_picker;
     if(m_shooter)
         delete m_shooter;
     if(m_bulletworld)
@@ -134,6 +138,7 @@ void DemoApplication::keyboardCallback(unsigned char key, int x, int y)
                    break;
 
         case ' ':
+                   m_picker->removePickingConstraint(m_bulletworld->getDynamicsWorld());
                    m_bulletworld->clientResetScene();
                    break;
         case '.':
@@ -294,11 +299,11 @@ void DemoApplication::mouseFunc(int button, int state, int x, int y)
             {
                 if (state==0) {
                     // Down
-                    m_bulletworld->pickStart(m_camera, x, y);
+                    m_picker->pickStart(m_bulletworld->getDynamicsWorld(), m_camera, x, y);
                 }
                 else {
                     // Up
-                    m_bulletworld->removePickingConstraint();
+                    m_picker->removePickingConstraint(m_bulletworld->getDynamicsWorld());
                 }
                 break;
             }
@@ -327,7 +332,7 @@ void DemoApplication::mouseFunc(int button, int state, int x, int y)
 
 void DemoApplication::mouseMotionFunc(int x,int y)
 {
-    m_bulletworld->pick(m_camera, x, y);
+    m_picker->pick(m_bulletworld->getDynamicsWorld(), m_camera, x, y);
 
     if (m_active_alt) {
         int dx = x - m_mouseOldX;

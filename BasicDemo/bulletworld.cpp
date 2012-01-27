@@ -1,22 +1,14 @@
 #include "bulletworld.h"
 #include "GLDebugFont.h"
-#include "camera.h"
 #include <btBulletDynamicsCommon.h>
 
 
 BulletWorld::BulletWorld()
     :
         m_dynamicsWorld(0),
-        m_pickConstraint(0),
-        pickedBody(0), //for deactivation state
 
         m_defaultContactProcessingThreshold(BT_LARGE_FLOAT),
-        m_idle(false),
-        use6Dof(false),
-        mousePickClamping(30.f),
-        gPickingConstraintId(0),
-        gHitPos(-1,-1,-1),
-        gOldPickingDist(0.f)
+        m_idle(false)
 {
     initPhysics();
 }
@@ -41,196 +33,10 @@ void BulletWorld::serialize()
 }
 
 
-void	BulletWorld::setDebugMode(int mode)
+void BulletWorld::setDebugMode(int mode)
 {
 	if (getDynamicsWorld() && getDynamicsWorld()->getDebugDrawer())
 		getDynamicsWorld()->getDebugDrawer()->setDebugMode(mode);
-}
-
-
-
-
-void BulletWorld::pickStart(Camera *camera, int x, int y)
-{
-    //add a point to point constraint for picking
-    if (m_dynamicsWorld)
-    {
-        btVector3 rayTo=camera->getRayTo(x,y);
-        btVector3 rayFrom;
-        if (camera->getOrtho()) {
-            rayFrom = camera->getCameraPosition(), camera->getRayTo(x,y);
-            rayFrom.setZ(-100.f);
-        } 
-        else {
-            rayFrom = camera->getCameraPosition();
-        }
-
-        ClosestRayResultCallback rayCallback(rayFrom,rayTo);
-        m_dynamicsWorld->rayTest(rayFrom,rayTo,rayCallback);
-        if (rayCallback.hasHit())
-        {
-
-
-            btRigidBody* body = btRigidBody::upcast(rayCallback.m_collisionObject);
-            if (body)
-            {
-                //other exclusions?
-                if (!(body->isStaticObject() || body->isKinematicObject()))
-                {
-                    pickedBody = body;
-                    pickedBody->setActivationState(DISABLE_DEACTIVATION);
-
-
-                    btVector3 pickPos = rayCallback.m_hitPointWorld;
-                    //printf("pickPos=%f,%f,%f\n",pickPos.getX(),pickPos.getY(),pickPos.getZ());
-
-
-                    btVector3 localPivot = body->getCenterOfMassTransform().inverse() * pickPos;
-
-
-
-
-
-
-                    if (use6Dof)
-                    {
-                        btTransform tr;
-                        tr.setIdentity();
-                        tr.setOrigin(localPivot);
-                        btGeneric6DofConstraint* dof6 = new btGeneric6DofConstraint(*body, tr,false);
-                        dof6->setLinearLowerLimit(btVector3(0,0,0));
-                        dof6->setLinearUpperLimit(btVector3(0,0,0));
-                        dof6->setAngularLowerLimit(btVector3(0,0,0));
-                        dof6->setAngularUpperLimit(btVector3(0,0,0));
-
-                        m_dynamicsWorld->addConstraint(dof6);
-                        m_pickConstraint = dof6;
-
-                        dof6->setParam(BT_CONSTRAINT_STOP_CFM,0.8,0);
-                        dof6->setParam(BT_CONSTRAINT_STOP_CFM,0.8,1);
-                        dof6->setParam(BT_CONSTRAINT_STOP_CFM,0.8,2);
-                        dof6->setParam(BT_CONSTRAINT_STOP_CFM,0.8,3);
-                        dof6->setParam(BT_CONSTRAINT_STOP_CFM,0.8,4);
-                        dof6->setParam(BT_CONSTRAINT_STOP_CFM,0.8,5);
-
-                        dof6->setParam(BT_CONSTRAINT_STOP_ERP,0.1,0);
-                        dof6->setParam(BT_CONSTRAINT_STOP_ERP,0.1,1);
-                        dof6->setParam(BT_CONSTRAINT_STOP_ERP,0.1,2);
-                        dof6->setParam(BT_CONSTRAINT_STOP_ERP,0.1,3);
-                        dof6->setParam(BT_CONSTRAINT_STOP_ERP,0.1,4);
-                        dof6->setParam(BT_CONSTRAINT_STOP_ERP,0.1,5);
-                    } else
-                    {
-                        btPoint2PointConstraint* p2p = new btPoint2PointConstraint(*body,localPivot);
-                        m_dynamicsWorld->addConstraint(p2p);
-                        m_pickConstraint = p2p;
-                        p2p->m_setting.m_impulseClamp = mousePickClamping;
-                        //very weak constraint for picking
-                        p2p->m_setting.m_tau = 0.001f;
-                        /*
-                           p2p->setParam(BT_CONSTRAINT_CFM,0.8,0);
-                           p2p->setParam(BT_CONSTRAINT_CFM,0.8,1);
-                           p2p->setParam(BT_CONSTRAINT_CFM,0.8,2);
-                           p2p->setParam(BT_CONSTRAINT_ERP,0.1,0);
-                           p2p->setParam(BT_CONSTRAINT_ERP,0.1,1);
-                           p2p->setParam(BT_CONSTRAINT_ERP,0.1,2);
-                           */
-
-
-                    }
-                    use6Dof = !use6Dof;
-
-                    //save mouse position for dragging
-                    gOldPickingPos = rayTo;
-                    gHitPos = pickPos;
-
-                    gOldPickingDist  = (pickPos-rayFrom).length();
-                }
-            }
-        }
-    }
-}
-
-
-void BulletWorld::removePickingConstraint()
-{
-	if (m_pickConstraint && m_dynamicsWorld)
-	{
-		m_dynamicsWorld->removeConstraint(m_pickConstraint);
-		delete m_pickConstraint;
-		//printf("removed constraint %i",gPickingConstraintId);
-		m_pickConstraint = 0;
-		pickedBody->forceActivationState(ACTIVE_TAG);
-		pickedBody->setDeactivationTime( 0.f );
-		pickedBody = 0;
-	}
-}
-
-
-void BulletWorld::pick(Camera *camera, int x, int y)
-{
-	if (m_pickConstraint)
-	{
-		//move the constraint pivot
-
-		if (m_pickConstraint->getConstraintType() == D6_CONSTRAINT_TYPE)
-		{
-			btGeneric6DofConstraint* pickCon = static_cast<btGeneric6DofConstraint*>(m_pickConstraint);
-			if (pickCon)
-			{
-				//keep it at the same picking distance
-
-				btVector3 newRayTo = camera->getRayTo(x,y);
-				btVector3 rayFrom;
-				btVector3 oldPivotInB = pickCon->getFrameOffsetA().getOrigin();
-
-				btVector3 newPivotB;
-				if (camera->getOrtho())
-				{
-					newPivotB = oldPivotInB;
-					newPivotB.setX(newRayTo.getX());
-					newPivotB.setY(newRayTo.getY());
-				} else
-				{
-					rayFrom = camera->getCameraPosition();
-					btVector3 dir = newRayTo-rayFrom;
-					dir.normalize();
-					dir *= gOldPickingDist;
-
-					newPivotB = rayFrom + dir;
-				}
-				pickCon->getFrameOffsetA().setOrigin(newPivotB);
-			}
-
-		} 
-        else {
-			btPoint2PointConstraint* pickCon = static_cast<btPoint2PointConstraint*>(m_pickConstraint);
-			if (pickCon)
-			{
-				//keep it at the same picking distance
-
-				btVector3 newRayTo = camera->getRayTo(x,y);
-				btVector3 rayFrom;
-				btVector3 oldPivotInB = pickCon->getPivotInB();
-				btVector3 newPivotB;
-				if (camera->getOrtho())
-				{
-					newPivotB = oldPivotInB;
-					newPivotB.setX(newRayTo.getX());
-					newPivotB.setY(newRayTo.getY());
-				} else
-				{
-					rayFrom = camera->getCameraPosition();
-					btVector3 dir = newRayTo-rayFrom;
-					dir.normalize();
-					dir *= gOldPickingDist;
-
-					newPivotB = rayFrom + dir;
-				}
-				pickCon->setPivotB(newPivotB);
-			}
-		}
-	}
 }
 
 
@@ -465,8 +271,6 @@ void BulletWorld::removeLastObject()
 
 void BulletWorld::clientResetScene()
 {
-    removePickingConstraint();
-
     int numObjects = 0;
     btDynamicsWorld *dynamicsWorld=getDynamicsWorld();
     if (dynamicsWorld)

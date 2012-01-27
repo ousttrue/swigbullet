@@ -19,19 +19,21 @@
 
 #include "LinearMath/btVector3.h"
 class BulletWorld;
+class BulletShooter;
+class BulletPicker;
 class Camera;
 class Profiler;
-class btDynamicsWorld;
 class Texture;
-class BulletShooter;
 
 
 class DemoApplication
 {
     BulletWorld *m_bulletworld;
     BulletShooter *m_shooter;
+    BulletPicker *m_picker;
     Camera *m_camera;
     Profiler *m_profiler;
+    Texture *m_texture;
     int m_mouseOldX;
     int m_mouseOldY;
     int m_mouseButtons;
@@ -45,7 +47,6 @@ class DemoApplication
     int m_debugMode;
     btVector3 m_sundirection;
     bool m_textureenabled;
-    Texture *m_texture;
 
 public:
     DemoApplication();
