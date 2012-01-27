@@ -6,7 +6,6 @@
 BulletWorld::BulletWorld()
     :
         m_dynamicsWorld(0),
-
         m_defaultContactProcessingThreshold(BT_LARGE_FLOAT),
         m_idle(false)
 {
@@ -170,25 +169,7 @@ void BulletWorld::createGround()
 	groundTransform.setIdentity();
 	groundTransform.setOrigin(btVector3(0,-50,0));
 
-	//We can also use DemoApplication::localCreateRigidBody, 
-    //but for clarity it is provided here:
-	{
-		btScalar mass(0.);
-		//rigidbody is dynamic if and only if mass is non zero, otherwise static
-		bool isDynamic = (mass != 0.f);
-		btVector3 localInertia(0,0,0);
-		if (isDynamic)
-			groundShape->calculateLocalInertia(mass,localInertia);
-
-		//using motionstate is recommended, 
-        //it provides interpolation capabilities, and only synchronizes 'active' objects
-		btDefaultMotionState* myMotionState = new btDefaultMotionState(groundTransform);
-		btRigidBodyConstructionInfo rbInfo(mass,myMotionState,groundShape,localInertia);
-		btRigidBody* body = new btRigidBody(rbInfo);
-
-		//add the body to the dynamics world
-		m_dynamicsWorld->addRigidBody(body);
-	}
+    localCreateRigidBody(0.0, groundTransform, groundShape);
 }
 
 
@@ -216,14 +197,6 @@ void BulletWorld::createCubes()
     btTransform startTransform;
     startTransform.setIdentity();
 
-    btScalar	mass(1.f);
-    //rigidbody is dynamic if and only if mass is non zero, otherwise static
-    bool isDynamic = (mass != 0.f);
-
-    btVector3 localInertia(0,0,0);
-    if (isDynamic){
-        colShape->calculateLocalInertia(mass,localInertia);
-    }
     float start_x = START_POS_X - ARRAY_SIZE_X/2;
     float start_y = START_POS_Y;
     float start_z = START_POS_Z - ARRAY_SIZE_Z/2;
@@ -235,15 +208,7 @@ void BulletWorld::createCubes()
                             btScalar(2.0*i + start_x),
                             btScalar(20+2.0*k + start_y),
                             btScalar(2.0*j + start_z)));
-                //using motionstate is recommended, 
-                //it provides interpolation capabilities, 
-                //and only synchronizes 'active' objects
-                btDefaultMotionState* myMotionState = 
-                    new btDefaultMotionState(startTransform);
-                btRigidBodyConstructionInfo 
-                    rbInfo(mass,myMotionState,colShape,localInertia);
-                btRigidBody* body = new btRigidBody(rbInfo);
-                m_dynamicsWorld->addRigidBody(body);
+                localCreateRigidBody(1.0f, startTransform, colShape);
             }
         }
     }
