@@ -150,9 +150,15 @@ void DemoApplication::keyboardCallback(unsigned char key, int x, int y)
                    break;
 
         case ' ':
-                   m_picker->removePickingConstraint(m_bulletworld->getDynamicsWorld());
-                   m_bulletworld->clientResetScene();
-                   break;
+                   {
+                       m_picker->removePickingConstraint(m_bulletworld->getDynamicsWorld());
+                       if(m_bulletworld)
+                           delete m_bulletworld;
+                       m_bulletworld=new BulletWorld;
+                       createGround();
+                       createCubes();
+                       break;
+                   }
         case '.':
                    {
                        m_shooter->shootBox(m_bulletworld, 

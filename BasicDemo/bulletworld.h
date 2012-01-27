@@ -28,8 +28,6 @@ class BulletWorld
 public:
     BulletWorld();
     ~BulletWorld();
-    void initPhysics();
-    void exitPhysics();
     void serialize();
     void setDebugMode(int mode);
     void debugDraw();
@@ -49,7 +47,6 @@ public:
         return m_dynamicsWorld;
     }
     void update(btScalar d);
-    void clientResetScene();
     btRigidBody* localCreateRigidBody(float mass, 
             const btTransform& startTransform,btCollisionShape* shape);
     void removeLastObject();
