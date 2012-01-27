@@ -47,22 +47,34 @@ DemoApplication::DemoApplication()
         m_sundirection(btVector3(1,-2,1)*1000),
         m_textureenabled(true)
 {
+    // bullet
     m_bulletworld=new BulletWorld();
     m_shooter=new BulletShooter();
     m_picker=new BulletPicker();
+    createGround();
+    createCubes();
+    // opengl
     m_camera=new Camera();
     m_camera->setCameraDistance(btScalar(50.));
-    m_profiler=new Profiler;
     m_texture=new Texture;
+
+    m_profiler=new Profiler;
 }
 
 
 DemoApplication::~DemoApplication()
 {
-    if(m_texture)
-        delete m_texture;
+	//delete collision shapes
+	for (int j=0;j<m_collisionShapes.size();j++)
+	{
+		btCollisionShape* shape = m_collisionShapes[j];
+		delete shape;
+	}
+	m_collisionShapes.clear();
     if(m_profiler)
         delete m_profiler;
+    if(m_texture)
+        delete m_texture;
     if(m_camera)
         delete m_camera;
     if(m_picker)
@@ -134,7 +146,7 @@ void DemoApplication::keyboardCallback(unsigned char key, int x, int y)
                        break;
                    }
         case 's' :
-                   m_bulletworld->update();
+                   m_bulletworld->update(getDeltaTimeMicroseconds());
                    break;
 
         case ' ':
@@ -387,4 +399,64 @@ void DemoApplication::displayCallback(void)
     m_bulletworld->debugDraw();
     glFlush();
 }
+
+
+void DemoApplication::createGround()
+{
+	///create a few basic rigid bodies
+	btCollisionShape* groundShape = 
+        new btBoxShape(btVector3(btScalar(50.),btScalar(50.),btScalar(50.)));
+	
+	m_collisionShapes.push_back(groundShape);
+
+	btTransform groundTransform;
+	groundTransform.setIdentity();
+	groundTransform.setOrigin(btVector3(0,-50,0));
+
+    m_bulletworld->localCreateRigidBody(0.0, groundTransform, groundShape);
+}
+
+
+///create 125 (5x5x5) dynamic object
+#define ARRAY_SIZE_X 5
+#define ARRAY_SIZE_Y 5
+#define ARRAY_SIZE_Z 5
+
+///scaling of the objects (0.1 = 20 centimeter boxes )
+#define SCALING 1.
+#define START_POS_X -5
+#define START_POS_Y -5
+#define START_POS_Z -3
+
+
+void DemoApplication::createCubes()
+{
+    //create a few dynamic rigidbodies
+    // Re-using the same collision is better for memory usage and performance
+    btCollisionShape* colShape = new btBoxShape(btVector3(SCALING*1,SCALING*1,SCALING*1));
+    //btCollisionShape* colShape = new btSphereShape(btScalar(1.));
+    m_collisionShapes.push_back(colShape);
+
+    /// Create Dynamic Objects
+    btTransform startTransform;
+    startTransform.setIdentity();
+
+    float start_x = START_POS_X - ARRAY_SIZE_X/2;
+    float start_y = START_POS_Y;
+    float start_z = START_POS_Z - ARRAY_SIZE_Z/2;
+
+    for (int k=0;k<ARRAY_SIZE_Y;k++) {
+        for (int i=0;i<ARRAY_SIZE_X;i++) {
+            for(int j = 0;j<ARRAY_SIZE_Z;j++) {
+                startTransform.setOrigin(SCALING*btVector3(
+                            btScalar(2.0*i + start_x),
+                            btScalar(20+2.0*k + start_y),
+                            btScalar(2.0*j + start_z)));
+                m_bulletworld->localCreateRigidBody(1.0f, startTransform, colShape);
+            }
+        }
+    }
+}
+
+
 

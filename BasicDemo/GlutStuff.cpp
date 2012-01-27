@@ -93,7 +93,8 @@ static void glutReshapeCallback(int w, int h)
 
 static void glutUpdate()
 {
-    gDemoApplication->getBulletWorld()->update();
+    gDemoApplication->getBulletWorld()->update(
+            gDemoApplication->getDeltaTimeMicroseconds());
     glutPostRedisplay();
 }
 

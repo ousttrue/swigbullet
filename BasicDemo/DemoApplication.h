@@ -18,12 +18,14 @@
 
 
 #include "LinearMath/btVector3.h"
+#include "LinearMath/btAlignedObjectArray.h"
 class BulletWorld;
 class BulletShooter;
 class BulletPicker;
 class Camera;
 class Profiler;
 class Texture;
+class btCollisionShape;
 
 
 class DemoApplication
@@ -31,6 +33,8 @@ class DemoApplication
     BulletWorld *m_bulletworld;
     BulletShooter *m_shooter;
     BulletPicker *m_picker;
+	//keep the collision shapes, for deletion/cleanup
+	btAlignedObjectArray<btCollisionShape*>	m_collisionShapes;
     Camera *m_camera;
     Profiler *m_profiler;
     Texture *m_texture;
@@ -47,11 +51,25 @@ class DemoApplication
     int m_debugMode;
     btVector3 m_sundirection;
     bool m_textureenabled;
+#ifdef USE_BT_CLOCK
+    btClock m_clock;
+#endif //USE_BT_CLOCK
 
 public:
     DemoApplication();
     virtual ~DemoApplication();
-
+    btScalar getDeltaTimeMicroseconds()
+    {
+#ifdef USE_BT_CLOCK
+        btScalar dt = (btScalar)m_clock.getTimeMicroseconds();
+        m_clock.reset();
+        return dt;
+#else
+        return btScalar(16666.);
+#endif
+    }
+    void createGround();
+    void createCubes();
     void setDebugMode(int mode)
     {
         m_debugMode = mode;

@@ -1,6 +1,4 @@
 #include "bulletworld.h"
-#include "GLDebugFont.h"
-#include <btBulletDynamicsCommon.h>
 
 
 BulletWorld::BulletWorld()
@@ -20,14 +18,6 @@ BulletWorld::~BulletWorld()
 
 
 void BulletWorld::initPhysics()
-{
-    createWorld();
-    createGround();
-    createCubes();
-}
-
-
-void BulletWorld::createWorld()
 {
 	///collision configuration contains default setup for memory, collision setup
 	m_collisionConfiguration = new btDefaultCollisionConfiguration();
@@ -65,13 +55,6 @@ void BulletWorld::exitPhysics()
 		m_dynamicsWorld->removeCollisionObject( obj );
 		delete obj;
 	}
-	//delete collision shapes
-	for (int j=0;j<m_collisionShapes.size();j++)
-	{
-		btCollisionShape* shape = m_collisionShapes[j];
-		delete shape;
-	}
-	m_collisionShapes.clear();
 	delete m_dynamicsWorld;
 	delete m_solver;
 	delete m_broadphase;
@@ -107,7 +90,8 @@ void BulletWorld::debugDraw()
 }
 
 
-btRigidBody* BulletWorld::localCreateRigidBody(float mass, const btTransform& startTransform,btCollisionShape* shape)
+btRigidBody* BulletWorld::localCreateRigidBody(float mass, 
+        const btTransform& startTransform,btCollisionShape* shape)
 {
 	btAssert((!shape || shape->getShapeType() != INVALID_SHAPE_PROXYTYPE));
 
@@ -140,78 +124,16 @@ btRigidBody* BulletWorld::localCreateRigidBody(float mass, const btTransform& st
 }
 
 
-void BulletWorld::update()
+void BulletWorld::update(btScalar ms)
 {
-    if (!m_idle){
-        //simple dynamics world doesn't handle fixed-time-stepping
-        float ms = getDeltaTimeMicroseconds();
-
-        ///step the simulation
-        if (m_dynamicsWorld)
-        {
-            m_dynamicsWorld->stepSimulation(ms / 1000000.f);
-            //optional but useful: debug drawing
-            m_dynamicsWorld->debugDrawWorld();
-        }
+    if(m_idle){
+        return;
     }
-}
-
-
-void BulletWorld::createGround()
-{
-	///create a few basic rigid bodies
-	btCollisionShape* groundShape = 
-        new btBoxShape(btVector3(btScalar(50.),btScalar(50.),btScalar(50.)));
-	
-	m_collisionShapes.push_back(groundShape);
-
-	btTransform groundTransform;
-	groundTransform.setIdentity();
-	groundTransform.setOrigin(btVector3(0,-50,0));
-
-    localCreateRigidBody(0.0, groundTransform, groundShape);
-}
-
-
-///create 125 (5x5x5) dynamic object
-#define ARRAY_SIZE_X 5
-#define ARRAY_SIZE_Y 5
-#define ARRAY_SIZE_Z 5
-
-///scaling of the objects (0.1 = 20 centimeter boxes )
-#define SCALING 1.
-#define START_POS_X -5
-#define START_POS_Y -5
-#define START_POS_Z -3
-
-
-void BulletWorld::createCubes()
-{
-    //create a few dynamic rigidbodies
-    // Re-using the same collision is better for memory usage and performance
-    btCollisionShape* colShape = new btBoxShape(btVector3(SCALING*1,SCALING*1,SCALING*1));
-    //btCollisionShape* colShape = new btSphereShape(btScalar(1.));
-    m_collisionShapes.push_back(colShape);
-
-    /// Create Dynamic Objects
-    btTransform startTransform;
-    startTransform.setIdentity();
-
-    float start_x = START_POS_X - ARRAY_SIZE_X/2;
-    float start_y = START_POS_Y;
-    float start_z = START_POS_Z - ARRAY_SIZE_Z/2;
-
-    for (int k=0;k<ARRAY_SIZE_Y;k++) {
-        for (int i=0;i<ARRAY_SIZE_X;i++) {
-            for(int j = 0;j<ARRAY_SIZE_Z;j++) {
-                startTransform.setOrigin(SCALING*btVector3(
-                            btScalar(2.0*i + start_x),
-                            btScalar(20+2.0*k + start_y),
-                            btScalar(2.0*j + start_z)));
-                localCreateRigidBody(1.0f, startTransform, colShape);
-            }
-        }
+    if(!m_dynamicsWorld){
+        return;
     }
+    ///step the simulation
+    m_dynamicsWorld->stepSimulation(ms / 1000000.f);
 }
 
 
@@ -234,56 +156,56 @@ void BulletWorld::removeLastObject()
 
 void BulletWorld::clientResetScene()
 {
-    int numObjects = 0;
+    /*
     btDynamicsWorld *dynamicsWorld=getDynamicsWorld();
-    if (dynamicsWorld)
+    if (!dynamicsWorld){
+        return;
+    }
+
+    int numConstraints = dynamicsWorld->getNumConstraints();
+    for (int i=0;i<numConstraints;i++) {
+        dynamicsWorld->getConstraint(0)->setEnabled(true);
+    }
+
+    ///create a copy of the array, not a reference!
+    btCollisionObjectArray copyArray = dynamicsWorld->getCollisionObjectArray();
+    int numObjects = dynamicsWorld->getNumCollisionObjects();
+    for (int i=0;i<numObjects;i++)
     {
-        int numConstraints = dynamicsWorld->getNumConstraints();
-        for (int i=0;i<numConstraints;i++)
+        btCollisionObject* colObj = copyArray[i];
+        btRigidBody* body = btRigidBody::upcast(colObj);
+        if (body)
         {
-            dynamicsWorld->getConstraint(0)->setEnabled(true);
-        }
-        numObjects = dynamicsWorld->getNumCollisionObjects();
-
-        ///create a copy of the array, not a reference!
-        btCollisionObjectArray copyArray = dynamicsWorld->getCollisionObjectArray();
-
-        for (int i=0;i<numObjects;i++)
-        {
-            btCollisionObject* colObj = copyArray[i];
-            btRigidBody* body = btRigidBody::upcast(colObj);
-            if (body)
+            if (body->getMotionState())
             {
-                if (body->getMotionState())
-                {
-                    btDefaultMotionState* myMotionState = 
-                        (btDefaultMotionState*)body->getMotionState();
-                    myMotionState->m_graphicsWorldTrans = myMotionState->m_startWorldTrans;
-                    body->setCenterOfMassTransform( myMotionState->m_graphicsWorldTrans );
-                    colObj->setInterpolationWorldTransform( myMotionState->m_startWorldTrans );
-                    colObj->forceActivationState(ACTIVE_TAG);
-                    colObj->activate();
-                    colObj->setDeactivationTime(0);
-                    //colObj->setActivationState(WANTS_DEACTIVATION);
-                }
-                //removed cached contact points 
-                //(this is not necessary if all objects have been removed 
-                //from the dynamics world)
-                if (dynamicsWorld->getBroadphase()->getOverlappingPairCache())
-                    dynamicsWorld->getBroadphase()->getOverlappingPairCache()->cleanProxyFromPairs(colObj->getBroadphaseHandle(),dynamicsWorld->getDispatcher());
+                btDefaultMotionState* myMotionState = 
+                    (btDefaultMotionState*)body->getMotionState();
+                myMotionState->m_graphicsWorldTrans = myMotionState->m_startWorldTrans;
+                body->setCenterOfMassTransform( myMotionState->m_graphicsWorldTrans );
+                colObj->setInterpolationWorldTransform( myMotionState->m_startWorldTrans );
+                colObj->forceActivationState(ACTIVE_TAG);
+                colObj->activate();
+                colObj->setDeactivationTime(0);
+                //colObj->setActivationState(WANTS_DEACTIVATION);
+            }
+            //removed cached contact points 
+            //(this is not necessary if all objects have been removed 
+            //from the dynamics world)
+            if (dynamicsWorld->getBroadphase()->getOverlappingPairCache())
+                dynamicsWorld->getBroadphase()->getOverlappingPairCache()->cleanProxyFromPairs(colObj->getBroadphaseHandle(),dynamicsWorld->getDispatcher());
 
-                btRigidBody* body = btRigidBody::upcast(colObj);
-                if (body && !body->isStaticObject())
-                {
-                    btRigidBody::upcast(colObj)->setLinearVelocity(btVector3(0,0,0));
-                    btRigidBody::upcast(colObj)->setAngularVelocity(btVector3(0,0,0));
-                }
+            btRigidBody* body = btRigidBody::upcast(colObj);
+            if (body && !body->isStaticObject())
+            {
+                btRigidBody::upcast(colObj)->setLinearVelocity(btVector3(0,0,0));
+                btRigidBody::upcast(colObj)->setAngularVelocity(btVector3(0,0,0));
             }
         }
-        ///reset some internal cached data in the broadphase
-        dynamicsWorld->getBroadphase()->resetPool(dynamicsWorld->getDispatcher());
-        dynamicsWorld->getConstraintSolver()->reset();
     }
+    ///reset some internal cached data in the broadphase
+    dynamicsWorld->getBroadphase()->resetPool(dynamicsWorld->getDispatcher());
+    dynamicsWorld->getConstraintSolver()->reset();
+    */
     exitPhysics();
     initPhysics();
 }
