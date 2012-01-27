@@ -115,7 +115,7 @@ void BulletPicker::pickStart(btDynamicsWorld *dynamicsWorld,
 
 
 void BulletPicker::pick(btDynamicsWorld *dynamicsWorld, 
-        const btVector3 &camPos, const btVector3 &rayTo, bool ortho)
+        const btVector3 &camPos, const btVector3 &rayTo)
 {
 	if (!m_pickConstraint){
         return;
@@ -135,12 +135,6 @@ void BulletPicker::pick(btDynamicsWorld *dynamicsWorld,
         btVector3 oldPivotInB = pickCon->getFrameOffsetA().getOrigin();
 
         btVector3 newPivotB;
-        if (ortho)
-        {
-            newPivotB = oldPivotInB;
-            newPivotB.setX(newRayTo.getX());
-            newPivotB.setY(newRayTo.getY());
-        } else
         {
             rayFrom = camPos;
             btVector3 dir = newRayTo-rayFrom;
@@ -162,12 +156,6 @@ void BulletPicker::pick(btDynamicsWorld *dynamicsWorld,
         btVector3 rayFrom;
         btVector3 oldPivotInB = pickCon->getPivotInB();
         btVector3 newPivotB;
-        if (ortho)
-        {
-            newPivotB = oldPivotInB;
-            newPivotB.setX(newRayTo.getX());
-            newPivotB.setY(newRayTo.getY());
-        } else
         {
             rayFrom = camPos;
             btVector3 dir = newRayTo-rayFrom;

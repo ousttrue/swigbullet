@@ -146,17 +146,6 @@ public:
     virtual void move(int dx, int dy, int w, int h)=0;
     virtual btVector3 getRayTo(int x,int y, int w, int h)=0;
     virtual void draw()=0;
-    virtual bool getOrtho()=0;
-};
-
-
-class OrthogonalCamera : public Camera
-{
-public:
-    virtual void move(int dx, int dy, int w, int h);
-    virtual btVector3 getRayTo(int x,int y, int w, int h);
-    virtual void draw();
-    virtual bool getOrtho(){ return true; }
 };
 
 
@@ -166,7 +155,6 @@ public:
     virtual void move(int dx, int dy, int w, int h);
     virtual btVector3 getRayTo(int x,int y, int w, int h);
     virtual void draw();
-    virtual bool getOrtho(){ return false; }
 };
 
 

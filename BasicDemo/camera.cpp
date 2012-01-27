@@ -27,41 +27,12 @@ Camera::Camera()
 }
 
 
-void OrthogonalCamera::move(int dx, int dy, int w, int h)
-{
-    btVector3 hor = getRayTo(0,0, w, h)-getRayTo(1,0, w, h);
-    btVector3 vert = getRayTo(0,0, w, h)-getRayTo(0,1, w, h);
-    m_cameraTargetPosition += hor* dx;
-    m_cameraTargetPosition += vert* dy;
-}
-
-
 void PerspectiveCamera::move(int dx, int dy, int w, int h)
 {
     btVector3 hor = getRayTo(0,0, w, h)-getRayTo(1,0, w, h);
     btVector3 vert = getRayTo(0,0, w, h)-getRayTo(0,1, w, h);
     m_cameraTargetPosition += hor* dx * btScalar(0.001);
     m_cameraTargetPosition += vert* dy * btScalar(0.001);
-}
-
-
-btVector3 OrthogonalCamera::getRayTo(int x,int y, int w, int h)
-{
-    btVector3 extents(m_aspect * 1.0f, 1.0f,0);
-
-    extents *= m_cameraDistance;
-    btVector3 lower = m_cameraTargetPosition - extents;
-    btVector3 upper = m_cameraTargetPosition + extents;
-
-    btScalar u = x / btScalar(w);
-    btScalar v = (h - y) / btScalar(h);
-
-    btVector3 p(0,0,0);
-    p.setValue(
-            (1.0f - u) * lower.getX() + u * upper.getX(),
-            (1.0f - v) * lower.getY() + v * upper.getY(),
-            m_cameraTargetPosition.getZ());
-    return p;
 }
 
 
@@ -104,19 +75,6 @@ btVector3 PerspectiveCamera::getRayTo(int x,int y, int w, int h)
     rayTo -= btScalar(y) * dVert;
     return rayTo;
 }
-
-
-void OrthogonalCamera::draw()
-{
-    btVector3 extents=btVector3(m_aspect * 1.0f, 1.0f,0) * m_cameraDistance;
-    btVector3 lower = m_cameraTargetPosition - extents;
-    btVector3 upper = m_cameraTargetPosition + extents;
-    glMatrixMode(GL_PROJECTION);
-    //gluOrtho2D(lower.x, upper.x, lower.y, upper.y);
-    glOrtho(lower.getX(), upper.getX(), lower.getY(), upper.getY(),-1000,1000);
-    glMatrixMode(GL_MODELVIEW);
-    //glTranslatef(100,210,0);
-} 
 
 
 void PerspectiveCamera::draw()

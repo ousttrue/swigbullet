@@ -159,17 +159,6 @@ void DemoApplication::keyboardCallback(unsigned char key, int x, int y)
         case 'g' : 
             toggleShadow();
             break;
-        case 'o' :
-            if(m_camera->getOrtho()){
-                delete m_camera;
-                m_camera=new PerspectiveCamera();
-            }
-            else{
-                delete m_camera;
-                m_camera=new OrthogonalCamera();
-            }
-            m_camera->reshape(m_glutScreenWidth, m_glutScreenHeight);
-            break;
         case 's' :
             m_bulletworld->update(getDeltaTimeMicroseconds());
             break;
@@ -352,20 +341,11 @@ void DemoApplication::mouseFunc(int button, int state, int x, int y)
             {
                 if (state==0) {
                     // Down
-                    if(m_camera->getOrtho()){
-                        btVector3 rayTo=m_camera->getRayTo(
-                                x, y, m_glutScreenWidth, m_glutScreenHeight);
-                        m_picker->pickStart(m_bulletworld->getDynamicsWorld(), 
-                                btVector3(rayTo[0], rayTo[1], -1000.0f),
-                                btVector3(rayTo[0], rayTo[1], 1000.0f));
-                    }
-                    else{
-                        btVector3 rayTo=m_camera->getRayTo(
-                                x, y, m_glutScreenWidth, m_glutScreenHeight);
-                        btVector3 rayFrom=m_camera->getCameraPosition();
-                        m_picker->pickStart(m_bulletworld->getDynamicsWorld(), 
-                                rayFrom, rayTo);
-                    }
+                    btVector3 rayTo=m_camera->getRayTo(
+                            x, y, m_glutScreenWidth, m_glutScreenHeight);
+                    btVector3 rayFrom=m_camera->getCameraPosition();
+                    m_picker->pickStart(m_bulletworld->getDynamicsWorld(), 
+                            rayFrom, rayTo);
                 }
                 else {
                     // Up
@@ -400,9 +380,7 @@ void DemoApplication::mouseMotionFunc(int x,int y)
 {
     m_picker->pick(m_bulletworld->getDynamicsWorld(), 
             m_camera->getCameraPosition(),
-            m_camera->getRayTo(x, y, m_glutScreenWidth, m_glutScreenHeight),
-            m_camera->getOrtho()
-            );
+            m_camera->getRayTo(x, y, m_glutScreenWidth, m_glutScreenHeight));
 
     if (m_active_alt) {
         int dx = x - m_mouseOldX;
