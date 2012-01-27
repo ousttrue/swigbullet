@@ -20,6 +20,67 @@ BulletWorld::~BulletWorld()
 }
 
 
+void BulletWorld::initPhysics()
+{
+    createWorld();
+    createGround();
+    createCubes();
+}
+
+
+void BulletWorld::createWorld()
+{
+	///collision configuration contains default setup for memory, collision setup
+	m_collisionConfiguration = new btDefaultCollisionConfiguration();
+
+	///use the default collision dispatcher. 
+    //For parallel processing you can use a diffent dispatcher 
+    //(see Extras/BulletMultiThreaded)
+	m_dispatcher = new	btCollisionDispatcher(m_collisionConfiguration);
+	m_broadphase = new btDbvtBroadphase();
+
+	///the default constraint solver. 
+    //For parallel processing you can use a different solver 
+    //(see Extras/BulletMultiThreaded)
+	m_solver = new btSequentialImpulseConstraintSolver;
+
+	m_dynamicsWorld = 
+        new btDiscreteDynamicsWorld(
+                m_dispatcher,m_broadphase,m_solver,m_collisionConfiguration);
+	m_dynamicsWorld->setGravity(btVector3(0,-10,0));
+}
+
+
+void BulletWorld::exitPhysics()
+{
+	//cleanup in the reverse order of creation/initialization
+	//remove the rigidbodies from the dynamics world and delete them
+	for (int i=m_dynamicsWorld->getNumCollisionObjects()-1; i>=0 ;i--)
+	{
+		btCollisionObject* obj = m_dynamicsWorld->getCollisionObjectArray()[i];
+		btRigidBody* body = btRigidBody::upcast(obj);
+		if (body && body->getMotionState())
+		{
+			delete body->getMotionState();
+		}
+		m_dynamicsWorld->removeCollisionObject( obj );
+		delete obj;
+	}
+	//delete collision shapes
+	for (int j=0;j<m_collisionShapes.size();j++)
+	{
+		btCollisionShape* shape = m_collisionShapes[j];
+		delete shape;
+	}
+	m_collisionShapes.clear();
+	delete m_dynamicsWorld;
+	delete m_solver;
+	delete m_broadphase;
+	delete m_dispatcher;
+	delete m_collisionConfiguration;
+}
+
+
 void BulletWorld::serialize()
 { 
     int maxSerializeBufferSize = 1024*1024*5;
@@ -40,7 +101,14 @@ void BulletWorld::setDebugMode(int mode)
 }
 
 
-btRigidBody*	BulletWorld::localCreateRigidBody(float mass, const btTransform& startTransform,btCollisionShape* shape)
+void BulletWorld::debugDraw()
+{
+	if (m_dynamicsWorld)
+		m_dynamicsWorld->debugDrawWorld();
+}
+
+
+btRigidBody* BulletWorld::localCreateRigidBody(float mass, const btTransform& startTransform,btCollisionShape* shape)
 {
 	btAssert((!shape || shape->getShapeType() != INVALID_SHAPE_PROXYTYPE));
 
@@ -87,36 +155,6 @@ void BulletWorld::update()
             m_dynamicsWorld->debugDrawWorld();
         }
     }
-}
-
-
-void BulletWorld::debugDraw()
-{
-	if (m_dynamicsWorld)
-		m_dynamicsWorld->debugDrawWorld();
-}
-
-
-void BulletWorld::createWorld()
-{
-	///collision configuration contains default setup for memory, collision setup
-	m_collisionConfiguration = new btDefaultCollisionConfiguration();
-
-	///use the default collision dispatcher. 
-    //For parallel processing you can use a diffent dispatcher 
-    //(see Extras/BulletMultiThreaded)
-	m_dispatcher = new	btCollisionDispatcher(m_collisionConfiguration);
-	m_broadphase = new btDbvtBroadphase();
-
-	///the default constraint solver. 
-    //For parallel processing you can use a different solver 
-    //(see Extras/BulletMultiThreaded)
-	m_solver = new btSequentialImpulseConstraintSolver;
-
-	m_dynamicsWorld = 
-        new btDiscreteDynamicsWorld(
-                m_dispatcher,m_broadphase,m_solver,m_collisionConfiguration);
-	m_dynamicsWorld->setGravity(btVector3(0,-10,0));
 }
 
 
@@ -212,60 +250,20 @@ void BulletWorld::createCubes()
 }
 
 
-void BulletWorld::initPhysics()
-{
-    createWorld();
-    createGround();
-    createCubes();
-}
-
-
-void	BulletWorld::exitPhysics()
-{
-	//cleanup in the reverse order of creation/initialization
-	//remove the rigidbodies from the dynamics world and delete them
-	for (int i=m_dynamicsWorld->getNumCollisionObjects()-1; i>=0 ;i--)
-	{
-		btCollisionObject* obj = m_dynamicsWorld->getCollisionObjectArray()[i];
-		btRigidBody* body = btRigidBody::upcast(obj);
-		if (body && body->getMotionState())
-		{
-			delete body->getMotionState();
-		}
-		m_dynamicsWorld->removeCollisionObject( obj );
-		delete obj;
-	}
-	//delete collision shapes
-	for (int j=0;j<m_collisionShapes.size();j++)
-	{
-		btCollisionShape* shape = m_collisionShapes[j];
-		delete shape;
-	}
-	m_collisionShapes.clear();
-	delete m_dynamicsWorld;
-	delete m_solver;
-	delete m_broadphase;
-	delete m_dispatcher;
-	delete m_collisionConfiguration;
-}
-
-
 void BulletWorld::removeLastObject()
 {
     int numObj = getDynamicsWorld()->getNumCollisionObjects();
-    if (numObj)
-    {
-        btCollisionObject* obj =
-            getDynamicsWorld()->getCollisionObjectArray()[numObj-1];
-
-        getDynamicsWorld()->removeCollisionObject(obj);
-        btRigidBody* body = btRigidBody::upcast(obj);
-        if (body && body->getMotionState())
-        {
-            delete body->getMotionState();
-        }
-        delete obj;
+    if(numObj==0){
+        return;
     }
+    btCollisionObject* obj =
+        getDynamicsWorld()->getCollisionObjectArray()[numObj-1];
+    getDynamicsWorld()->removeCollisionObject(obj);
+    btRigidBody* body = btRigidBody::upcast(obj);
+    if (body && body->getMotionState()) {
+        delete body->getMotionState();
+    }
+    delete obj;
 }
 
 
@@ -285,9 +283,6 @@ void BulletWorld::clientResetScene()
         ///create a copy of the array, not a reference!
         btCollisionObjectArray copyArray = dynamicsWorld->getCollisionObjectArray();
 
-
-
-
         for (int i=0;i<numObjects;i++)
         {
             btCollisionObject* colObj = copyArray[i];
@@ -306,7 +301,9 @@ void BulletWorld::clientResetScene()
                     colObj->setDeactivationTime(0);
                     //colObj->setActivationState(WANTS_DEACTIVATION);
                 }
-                //removed cached contact points (this is not necessary if all objects have been removed from the dynamics world)
+                //removed cached contact points 
+                //(this is not necessary if all objects have been removed 
+                //from the dynamics world)
                 if (dynamicsWorld->getBroadphase()->getOverlappingPairCache())
                     dynamicsWorld->getBroadphase()->getOverlappingPairCache()->cleanProxyFromPairs(colObj->getBroadphaseHandle(),dynamicsWorld->getDispatcher());
 
@@ -325,5 +322,4 @@ void BulletWorld::clientResetScene()
     exitPhysics();
     initPhysics();
 }
-
 
