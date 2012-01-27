@@ -148,6 +148,15 @@ static void glutMouseFuncCallback(int button, int state, int x, int y)
                 gDemoApplication->onRightUp(x, y);
             }
             break;
+
+        case 3:
+            gDemoApplication->onWheel(1);
+            break;
+
+        case 4:
+            gDemoApplication->onWheel(-1);
+            break;
+
         default:
             std::cout << "unknown button: " << button << std::endl;
     }

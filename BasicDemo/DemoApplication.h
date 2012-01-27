@@ -102,6 +102,7 @@ public:
     bool onMiddleUp(int x, int y);
     bool onRightDown(int x, int y);
     bool onRightUp(int x, int y);
+    bool onWheel(int d);
     void onMotion(int x,int y);
     void onDraw();
 

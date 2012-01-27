@@ -379,6 +379,17 @@ bool DemoApplication::onRightUp(int x, int y)
 }
 
 
+bool DemoApplication::onWheel(int d)
+{
+    if(d>0){
+        m_camera->zoomIn(); 
+    }
+    else if(d<0){
+        m_camera->zoomOut(); 
+    }
+}
+
+
 void DemoApplication::onMotion(int x,int y)
 {
     m_picker->pick(m_bulletworld->getDynamicsWorld(), 
