@@ -25,7 +25,7 @@ public:
     BulletPicker();
     ~BulletPicker();
     void pickStart(btDynamicsWorld *dynamicsWorld,
-            const btVector3 &camPos, const btVector3 &rayTo, bool ortho);
+            const btVector3 &rayFrom, const btVector3 &rayTo);
     void pick(btDynamicsWorld *dynamicsWorld,
             const btVector3 &camPos, const btVector3 &rayTo, bool ortho);
     void removePickingConstraint(btDynamicsWorld *dynamicsWorld);

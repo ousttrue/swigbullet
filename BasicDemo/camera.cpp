@@ -60,7 +60,8 @@ btVector3 OrthogonalCamera::getRayTo(int x,int y, int w, int h)
     p.setValue(
             (1.0f - u) * lower.getX() + u * upper.getX(),
             (1.0f - v) * lower.getY() + v * upper.getY(),
-            m_cameraTargetPosition.getZ());
+            //m_cameraTargetPosition.getZ());
+            -1000.0f);
     return p;
 }
 

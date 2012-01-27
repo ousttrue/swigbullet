@@ -21,24 +21,14 @@ BulletPicker::~BulletPicker()
 
 
 void BulletPicker::pickStart(btDynamicsWorld *dynamicsWorld, 
-        const btVector3 &camPos, const btVector3 &rayTo, bool ortho
-        )
+        const btVector3 &rayFrom, const btVector3 &rayTo)
 {
     //add a point to point constraint for picking
     if (!dynamicsWorld) {
         return;
     }
 
-    btVector3 rayFrom;
-    if (ortho) {
-        rayFrom = rayTo;
-        rayFrom.setZ(-100.f);
-    } 
-    else {
-        rayFrom = camPos;
-    }
-
-    ClosestRayResultCallback rayCallback(rayFrom,rayTo);
+    ClosestRayResultCallback rayCallback(rayFrom, rayTo);
     dynamicsWorld->rayTest(rayFrom,rayTo,rayCallback);
     if (rayCallback.hasHit())
     {
@@ -124,24 +114,6 @@ void BulletPicker::pickStart(btDynamicsWorld *dynamicsWorld,
 }
 
 
-void BulletPicker::removePickingConstraint(btDynamicsWorld *dynamicsWorld)
-{
-    if(!dynamicsWorld){
-        return;
-    }
-    if(!m_pickConstraint){
-        return;
-    }
-    dynamicsWorld->removeConstraint(m_pickConstraint);
-    delete m_pickConstraint;
-    //printf("removed constraint %i",gPickingConstraintId);
-    m_pickConstraint = 0;
-    pickedBody->forceActivationState(ACTIVE_TAG);
-    pickedBody->setDeactivationTime( 0.f );
-    pickedBody = 0;
-}
-
-
 void BulletPicker::pick(btDynamicsWorld *dynamicsWorld, 
         const btVector3 &camPos, const btVector3 &rayTo, bool ortho)
 {
@@ -206,5 +178,23 @@ void BulletPicker::pick(btDynamicsWorld *dynamicsWorld,
         }
         pickCon->setPivotB(newPivotB);
     }
+}
+
+
+void BulletPicker::removePickingConstraint(btDynamicsWorld *dynamicsWorld)
+{
+    if(!dynamicsWorld){
+        return;
+    }
+    if(!m_pickConstraint){
+        return;
+    }
+    dynamicsWorld->removeConstraint(m_pickConstraint);
+    delete m_pickConstraint;
+    //printf("removed constraint %i",gPickingConstraintId);
+    m_pickConstraint = 0;
+    pickedBody->forceActivationState(ACTIVE_TAG);
+    pickedBody->setDeactivationTime( 0.f );
+    pickedBody = 0;
 }
 
