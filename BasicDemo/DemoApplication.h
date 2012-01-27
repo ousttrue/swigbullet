@@ -23,11 +23,13 @@ class Camera;
 class Profiler;
 class btDynamicsWorld;
 class Texture;
+class BulletShooter;
 
 
 class DemoApplication
 {
     BulletWorld *m_bulletworld;
+    BulletShooter *m_shooter;
     Camera *m_camera;
     Profiler *m_profiler;
     int m_mouseOldX;

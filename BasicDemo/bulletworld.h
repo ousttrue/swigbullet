@@ -33,13 +33,11 @@ class BulletWorld
     btDynamicsWorld* m_dynamicsWorld;
     ///constraint for mouse picking
     btTypedConstraint* m_pickConstraint;
-    btCollisionShape* m_shootBoxShape;
     btRigidBody* pickedBody;
 #ifdef USE_BT_CLOCK
     btClock m_clock;
 #endif //USE_BT_CLOCK
 
-    float m_ShootBoxInitialSpeed;
     btScalar m_defaultContactProcessingThreshold;
     bool m_idle;
     bool use6Dof;
@@ -73,8 +71,6 @@ public:
         return btScalar(16666.);
 #endif
     }
-    void setShootBoxShape ();
-    void shootBox(Camera *camera, int x, int y);
     void pickStart(Camera *camera, int x, int y);
     void pick(Camera *camera, int x, int y);
     void removePickingConstraint();
@@ -82,10 +78,6 @@ public:
     void debugDraw();
     void clientResetScene();
     void setDebugMode(int mode);
-    void setShootInitialSpeed(btScalar initialSpeed)
-    {
-        m_ShootBoxInitialSpeed=initialSpeed;
-    }
     void toggleIdle() {
         m_idle=!m_idle;
     }
@@ -97,14 +89,10 @@ public:
     {
         return m_idle;
     }
-    btScalar getShootInitialSpeed(){
-        return m_ShootBoxInitialSpeed;
-    }
     btRigidBody* localCreateRigidBody(float mass, 
             const btTransform& startTransform,btCollisionShape* shape);
     void removeLastObject();
     void showProfileInfo(int& xOffset,int& yStart, int yIncr);
-    void keyboardCallback(unsigned char key, int x, int y);
 };
 
 

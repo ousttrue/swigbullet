@@ -8,10 +8,8 @@ BulletWorld::BulletWorld()
     :
         m_dynamicsWorld(0),
         m_pickConstraint(0),
-        m_shootBoxShape(0),
         pickedBody(0), //for deactivation state
 
-        m_ShootBoxInitialSpeed(40.f),
         m_defaultContactProcessingThreshold(BT_LARGE_FLOAT),
         m_idle(false),
         use6Dof(false),
@@ -26,8 +24,6 @@ BulletWorld::BulletWorld()
 
 BulletWorld::~BulletWorld()
 {
-	if (m_shootBoxShape)
-		delete m_shootBoxShape;
     exitPhysics();
 }
 
@@ -52,50 +48,6 @@ void	BulletWorld::setDebugMode(int mode)
 }
 
 
-void	BulletWorld::setShootBoxShape ()
-{
-	if (!m_shootBoxShape)
-	{
-		btBoxShape* box = new btBoxShape(btVector3(.5f,.5f,.5f));
-		box->initializePolyhedralFeatures();
-		m_shootBoxShape = box;
-	}
-}
-
-
-void	BulletWorld::shootBox(Camera *camera, int x, int y)
-{
-    btVector3 camPos=camera->getCameraPosition();
-    btVector3 destination=camera->getRayTo(x,y);
-	if (m_dynamicsWorld)
-	{
-		float mass = 1.f;
-		btTransform startTransform;
-		startTransform.setIdentity();
-		startTransform.setOrigin(camPos);
-
-		setShootBoxShape ();
-
-		btRigidBody* body = this->localCreateRigidBody(mass, startTransform,m_shootBoxShape);
-		body->setLinearFactor(btVector3(1,1,1));
-		//body->setRestitution(1);
-
-		btVector3 linVel(destination[0]-camPos[0],destination[1]-camPos[1],destination[2]-camPos[2]);
-		linVel.normalize();
-		linVel*=m_ShootBoxInitialSpeed;
-
-		body->getWorldTransform().setOrigin(camPos);
-		body->getWorldTransform().setRotation(btQuaternion(0,0,0,1));
-		body->setLinearVelocity(linVel);
-		body->setAngularVelocity(btVector3(0,0,0));
-		body->setCcdMotionThreshold(0.5);
-		body->setCcdSweptSphereRadius(0.9f);
-//		printf("shootBox uid=%d\n", body->getBroadphaseHandle()->getUid());
-//		printf("camPos=%f,%f,%f\n",camPos.getX(),camPos.getY(),camPos.getZ());
-//		printf("destination=%f,%f,%f\n",destination.getX(),destination.getY(),destination.getZ());
-		
-	}
-}
 
 
 void BulletWorld::pickStart(Camera *camera, int x, int y)
@@ -570,28 +522,4 @@ void BulletWorld::clientResetScene()
     initPhysics();
 }
 
-
-void BulletWorld::keyboardCallback(unsigned char key, int x, int y)
-{
-    switch(key)
-    {
-        case '=':
-            {
-                serialize();
-                break;
-            }
-        case '+':
-            {
-                setShootInitialSpeed(
-                        getShootInitialSpeed() + 10.f);
-                break;
-            }
-        case '-':
-            {
-                setShootInitialSpeed(
-                        getShootInitialSpeed() - 10.f);
-                break;
-            }
-    }
-}
 

@@ -15,6 +15,7 @@
 #include "DemoApplication.h"
 #include "camera.h"
 #include "bulletworld.h"
+#include "bulletshooter.h"
 #include "profiler.h"
 #include "GL_ShapeDrawer.h"
 #include "texture.h"
@@ -46,6 +47,7 @@ DemoApplication::DemoApplication()
         m_textureenabled(true)
 {
     m_bulletworld=new BulletWorld();
+    m_shooter=new BulletShooter();
     m_camera=new Camera();
     m_camera->setCameraDistance(btScalar(50.));
     m_profiler=new Profiler;
@@ -61,6 +63,8 @@ DemoApplication::~DemoApplication()
         delete m_profiler;
     if(m_camera)
         delete m_camera;
+    if(m_shooter)
+        delete m_shooter;
     if(m_bulletworld)
         delete m_bulletworld;
 }
@@ -134,7 +138,9 @@ void DemoApplication::keyboardCallback(unsigned char key, int x, int y)
                    break;
         case '.':
                    {
-                       m_bulletworld->shootBox(m_camera, x, y);
+                       m_shooter->shootBox(m_bulletworld, 
+                               m_camera->getCameraPosition(), 
+                               m_camera->getRayTo(x,y));
                        break;
                    }
         case 'u' : enableTexture(!enableTexture(false));break;
@@ -232,12 +238,28 @@ void DemoApplication::keyboardCallback(unsigned char key, int x, int y)
                            m_debugMode |= btIDebugDraw::DBG_EnableCCD;
                        break;
                    }
+        case '+':
+            {
+                m_shooter->setShootInitialSpeed(
+                        m_shooter->getShootInitialSpeed() + 10.f);
+                break;
+            }
+        case '-':
+            {
+                m_shooter->setShootInitialSpeed(
+                        m_shooter->getShootInitialSpeed() - 10.f);
+                break;
+            }
+        case '=':
+            {
+                m_bulletworld->serialize();
+                break;
+            }
 
         default:
                    //        std::cout << "unused key : " << key << std::endl;
                    break;
     }
-    m_bulletworld->keyboardCallback(key, x, y);
 
     if (m_bulletworld->getDynamicsWorld() && 
             m_bulletworld->getDynamicsWorld()->getDebugDrawer())
@@ -290,7 +312,9 @@ void DemoApplication::mouseFunc(int button, int state, int x, int y)
             {
                 if (state==0) {
                     // Down
-                    m_bulletworld->shootBox(m_camera, x, y);
+                    m_shooter->shootBox(m_bulletworld, 
+                            m_camera->getCameraPosition(), 
+                            m_camera->getRayTo(x,y));
                 }
                 break;
             }

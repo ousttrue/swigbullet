@@ -47,15 +47,8 @@ includedirs {
     "../gldrawer",
 }
 files {
-    'bulletworld.cpp',
-    'bulletworld.h',
-    'camera.cpp',
-    'camera.h',
-    'DemoApplication.cpp',
-    'DemoApplication.h',
-    'GlutStuff.cpp',
-    'GlutStuff.h',
-    'main.cpp',
+    '*.cpp',
+    '*.h',
 }
 links {
     'gldrawer',
