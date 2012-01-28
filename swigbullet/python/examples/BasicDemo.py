@@ -45,8 +45,14 @@ class Controller(object):
         self.light_position0 = numpy.array([1.0, 10.0, 1.0, 0.0], 'f')
         self.light_position1 = numpy.array([-1.0, -10.0, -1.0, 0.0], 'f')
 
+        self.m_active_alt=True
+        self.m_mouseOldX=None
+        self.m_mouseOldY=None
         self.w=1
         self.h=1
+        self.m_leftDown=False
+        self.m_middleDown=False
+        self.m_rightDown=False
         self.is_initialized=False
 
     def createGround(self):
@@ -87,28 +93,70 @@ class Controller(object):
         self.h=h
 
     def onLeftDown(self, x, y):
-        print 'onLeftDown', x, y
+        self.m_mouseOldX = x;
+        self.m_mouseOldY = y;
+
+        self.m_leftDown=True;
+        if(self.m_active_alt):
+            return False;
+        #self.m_picker.pickStart(m_bulletworld.getDynamicsWorld(), 
+        #        m_camera.m_view.position, 
+        #        m_camera.m_view.getRayTo(x, y));
+        return True;
 
     def onLeftUp(self, x, y):
-        print 'onLeftUp', x, y
+        self.m_leftDown=False;
+        #m_picker.removePickingConstraint(m_bulletworld.getDynamicsWorld());
+        return True;
 
     def onMiddleDown(self, x, y):
-        print 'onMiddleDown', x, y
+        self.m_mouseOldX = x;
+        self.m_mouseOldY = y;
+
+        self.m_middleDown=True;
+        return False;
 
     def onMiddleUp(self, x, y):
-        print 'onMiddleUp', x, y
+        self.m_middleDown=False;
+        return False;
 
     def onRightDown(self, x, y):
-        print 'onRightDown', x, y
+        self.m_mouseOldX = x;
+        self.m_mouseOldY = y;
+
+        self.m_rightDown=True;
+        #self.m_shooter.shootBox(self.world, 
+        #        self.camera.m_view.position, 
+        #        self.camera.m_view.getRayTo(x, y));
+        return True;
 
     def onRightUp(self, x, y):
-        print 'onRightUp', x, y
-
-    def onMotion(self, x, y):
-        print 'onMotion', x, y
+        self.m_rightDown=False;
+        return False;
 
     def onWheel(self, d):
-        print 'onWheel', d
+        if(d>0):
+            self.camera.zoomIn(); 
+        elif(d<0):
+            self.camera.zoomOut(); 
+
+    def onMotion(self, x, y):
+        #m_picker.pick(m_bulletworld.getDynamicsWorld(), 
+        #        m_camera.m_view.position,
+        #        m_camera.m_view.getRayTo(x, y));
+
+        if (self.m_active_alt):
+            dx = x - self.m_mouseOldX;
+            dy = y - self.m_mouseOldY;
+            # only if ALT key is pressed (Maya style)
+            if(self.m_middleDown):
+                self.camera.move(dx, dy);
+            if(self.m_leftDown):
+                self.camera.rot(dx, dy);
+            if(self.m_rightDown):
+                self.camera.dolly(dy);
+        self.m_mouseOldX = x;
+        self.m_mouseOldY = y;
 
     def onKeyDown(self, key):
         print 'onKeyDown', key
@@ -197,13 +245,14 @@ class Controller(object):
 
 if __name__=="__main__":
     controller=Controller()
-    #import glglue.glut
-    #glglue.glut.mainloop(controller, width=1024, height=600, 
-    #        title="Bullet Physics Demo. http:#bulletphysics.org")
+    title="Bullet Physics Demo. http:#bulletphysics.org"
+    import glglue.glut
+    glglue.glut.mainloop(controller, width=1024, height=600, title=title)
 
     #import glglue.wgl
-    #glglue.wgl.mainloop(controller, width=640, height=480, title="sample")
+    #glglue.wgl.mainloop(controller, width=640, height=480, title=title)
 
+    """
     import pygame
     from pygame.locals import *
     pygame.init()
@@ -237,4 +286,5 @@ if __name__=="__main__":
             pygame.display.flip()
 
     sys.exit(0)
+    """
 
