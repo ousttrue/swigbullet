@@ -28,7 +28,7 @@ START_POS_Z=-3
 
 class Controller(object):
     def __init__(self):
-        self.view=Camera(50)
+        self.camera=Camera(50)
         # bullet
         self.world=BulletWorld()
         self.createGround()
@@ -87,7 +87,7 @@ class Controller(object):
 
     def onResize(self, w, h):
         glViewport(0, 0, w, h)
-        self.view.resize(w, h)
+        self.camera.resize(w, h)
         self.w=w
         self.h=h
 
@@ -165,7 +165,7 @@ class Controller(object):
             self.onInitialize()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         # render
-        self.view.draw()
+        self.camera.draw()
         if self.world:
             if self.m_enableshadows:
                 bullet.renderwithshadow(self.world.m_dynamicsWorld, 
@@ -174,10 +174,10 @@ class Controller(object):
             else:
                 bullet.render(self.world.m_dynamicsWorld, self.m_debugMode)
             # profiler
-            self.view.setOrthographicProjection();
+            self.camera.setOrthographicProjection();
             self.profiler.render(self.world.m_idle, self.m_debugMode,
                     self.w, self.h)
-            self.view.resetPerspectiveProjection();
+            self.camera.resetPerspectiveProjection();
 
         glFlush()
 
