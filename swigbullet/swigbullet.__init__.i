@@ -100,6 +100,36 @@ SIMD_EPSILON=0.0000001192092896;
     }
 }
 
+// calculateLocalInertia
+%typemap(argout) (btVector3& inertia){
+
+    PyObject *v1=PyTuple_New(3);
+    PyTuple_SET_ITEM(v1, 0, PyFloat_FromDouble($1->getX()));
+    PyTuple_SET_ITEM(v1, 1, PyFloat_FromDouble($1->getY()));
+    PyTuple_SET_ITEM(v1, 2, PyFloat_FromDouble($1->getZ()));
+
+    if ((!$result) || ($result == Py_None)) {
+        // a single return value
+        $result =  v1;
+    } 
+    else if(PyTuple_Check($result)){
+        // connect return values
+        PyObject *o1 = $result;
+        PyObject *o2 =  PyTuple_New(1);
+        PyTuple_SetItem(o2, 0, v1);
+        $result = PySequence_Concat(o1, o2);
+        Py_DECREF(o1);
+        Py_DECREF(o2);
+    }
+    else{
+        // create new return tuple
+        PyObject *o=$result;
+        $result =  PyTuple_New(2);
+        PyTuple_SetItem($result, 0, o);
+        PyTuple_SetItem($result, 1, v1);
+    }
+}
+
 // getOpenGLMatrix
 %typemap(ignore) (btScalar *m)(btScalar tmpM[16]) {
     $1=tmpM;    
