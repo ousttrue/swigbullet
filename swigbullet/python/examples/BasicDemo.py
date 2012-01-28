@@ -3,12 +3,9 @@ import sys
 from OpenGL.GL import *
 import numpy
 import swigbullet as bullet
-#from swigbullet import GL_ShapeDrawer
-from bulletdemo.camera import Camera
-from bulletdemo.bulletworld import BulletWorld
+import bulletdemo.camera
+import bulletdemo.bulletworld
 from bulletdemo.vector3 import Vector3
-#from bulletdemo.profiler import Profiler
-#from bulletdemo.texture import Texture
 
 
 #create 125 (5x5x5) dynamic object
@@ -26,9 +23,9 @@ START_POS_Z=-3
 
 class Controller(object):
     def __init__(self):
-        self.camera=Camera(50)
+        self.camera=bulletdemo.camera.Camera(50)
         # bullet
-        self.world=BulletWorld()
+        self.world=bulletdemo.bulletworld.BulletWorld()
         self.createGround()
         self.createCubes()
         self.m_clock=bullet.btClock()
