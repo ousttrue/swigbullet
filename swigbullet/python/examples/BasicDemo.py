@@ -23,7 +23,7 @@ START_POS_Z=-3
 
 class Controller(object):
     def __init__(self):
-        self.camera=bulletdemo.camera.Camera(50)
+        self.camera=bulletdemo.camera.Camera()
         # bullet
         self.world=bulletdemo.bulletworld.BulletWorld()
         self.createGround()
@@ -159,6 +159,12 @@ class Controller(object):
         if not self.is_initialized:
             self.onInitialize()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        # reset matrix
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+
         # render
         self.camera.draw()
         if self.world:
@@ -168,11 +174,23 @@ class Controller(object):
                         self.m_sundirection, self.m_debugMode)
             else:
                 bullet.render(self.world.m_dynamicsWorld, self.m_debugMode)
-            # profiler
-            self.camera.setOrthographicProjection();
+
+            # push
+            glMatrixMode(GL_PROJECTION);
+            glPushMatrix();
+            glMatrixMode(GL_MODELVIEW);
+            glPushMatrix();
+
+            bulletdemo.camera.setOrthographicProjection(
+                    self.w, self.h);
             self.profiler.render(self.world.m_idle, self.m_debugMode,
-                    self.w, self.h)
-            self.camera.resetPerspectiveProjection();
+                    self.w, self.h);
+
+            # restore
+            glMatrixMode(GL_PROJECTION);
+            glPopMatrix();
+            glMatrixMode(GL_MODELVIEW);
+            glPopMatrix();
 
         glFlush()
 
