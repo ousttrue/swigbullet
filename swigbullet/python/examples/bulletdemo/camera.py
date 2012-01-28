@@ -2,7 +2,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 import math
 import swigbullet as bullet
-from . import vector3
+from .vector3 import Vector3
 
 
 class Camera(object):
@@ -10,9 +10,9 @@ class Camera(object):
     def __init__(self, distance=15.0):
         self.m_ele=20.0
         self.m_azi=0.0
-        self.m_cameraPosition=(0.0,0.0,0.0)
-        self.m_cameraTargetPosition=(0.0,0.0,0.0)
-        self.m_cameraUp=(0.0,1.0,0.0)
+        self.m_cameraPosition=Vector3(0.0,0.0,0.0)
+        self.m_cameraTargetPosition=Vector3(0.0,0.0,0.0)
+        self.m_cameraUp=Vector3(0.0,1.0,0.0)
         self.m_forwardAxis=2
         self.m_zoomStepSize=0.4
         self.m_cameraDistance=distance
@@ -115,12 +115,12 @@ class Camera(object):
 
         eyePos=[0.0, 0.0, 0.0];
         eyePos[self.m_forwardAxis] = -self.m_cameraDistance;
-        eyePos=tuple(eyePos)
+        eyePos=Vector3(*eyePos)
 
-        forward=eyePos[:]
-        if (vector3.length2(forward) < bullet.SIMD_EPSILON):
+        forward=Vector3(*eyePos)
+        if (forward.length2() < bullet.SIMD_EPSILON):
             forward=(1.0, 0.0, 0.0);
-        right = vector3.cross(self.m_cameraUp, forward);
+        right = self.m_cameraUp.cross(forward);
         roll=bullet.btQuaternion(right, -rele);
 
         m=(bullet.btMatrix3x3(rot) * bullet.btMatrix3x3(roll))

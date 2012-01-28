@@ -6,7 +6,7 @@ import swigbullet as bullet
 #from swigbullet import GL_ShapeDrawer
 from bulletdemo.camera import Camera
 from bulletdemo.bulletworld import BulletWorld
-from bulletdemo import vector3
+from bulletdemo.vector3 import Vector3
 #from bulletdemo.profiler import Profiler
 #from bulletdemo.texture import Texture
 from swigbullet import Profiler
@@ -40,7 +40,7 @@ class Controller(object):
         # scene
         self.m_textureenabled=True
         self.m_enableshadows=True
-        self.m_sundirection=vector3.mul((1,-2,1), 1000.0)
+        self.m_sundirection=Vector3(1,-2,1)*1000.0
         self.m_debugMode=0
         #
         self.light_ambient = numpy.array([0.2, 0.2, 0.2, 1.0], 'f')
@@ -76,13 +76,13 @@ class Controller(object):
         for k in range(ARRAY_SIZE_Y):
             for i in range(ARRAY_SIZE_X):
                 for j in range(ARRAY_SIZE_Z):
-                    startTransform.setOrigin(vector3.mul(
-                        (
-                            (2.0*i + start_x),
-                            (20+2.0*k + start_y),
-                            (2.0*j + start_z)
-                            ), 
-                        SCALING));
+                    startTransform.setOrigin(
+                            Vector3(
+                                (2.0*i + start_x),
+                                (20+2.0*k + start_y),
+                                (2.0*j + start_z)
+                                )*
+                            SCALING);
                     self.world.localCreateRigidBody(1.0, startTransform, colShape)
 
     def onResize(self, w, h):
