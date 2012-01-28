@@ -9,8 +9,6 @@ from bulletdemo.bulletworld import BulletWorld
 from bulletdemo.vector3 import Vector3
 #from bulletdemo.profiler import Profiler
 #from bulletdemo.texture import Texture
-from swigbullet import Profiler
-from swigbullet import Texture
 
 
 #create 125 (5x5x5) dynamic object
@@ -35,8 +33,8 @@ class Controller(object):
         self.createCubes()
         self.m_clock=bullet.btClock()
         # gldrawer
-        self.profiler=Profiler()
-        self.texture=Texture()
+        self.profiler=bullet.Profiler()
+        self.texture=bullet.Texture()
         # scene
         self.m_textureenabled=True
         self.m_enableshadows=True
