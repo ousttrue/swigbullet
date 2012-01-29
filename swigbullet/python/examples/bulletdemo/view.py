@@ -26,30 +26,30 @@ class View(object):
         tanFov = (top-bottom)*0.5 / nearPlane
         fov = 2.0 * math.atan(tanFov)
 
-        rayFrom = self.position[:]
-        rayForward = vector3.normalize(vector3.sub(target, position))
+        rayFrom = Vector3(*self.position)
+        rayForward = (self.target-self.position).normalize()
         farPlane = 10000.0
-        rayForward=vector3.mul(rayForward, farPlane)
+        rayForward*= farPlane
 
-        vertical = up[:]
+        vertical = Vector3(*self.up)
 
-        hor = vector3.normalize(vector3.cross(rayForward, vertical))
+        hor = rayForward.cross(vertical).normalize()
 
-        vertical = vector3.normalize(vector3.cross(hor, rayForward))
+        vertical = hor.cross(rayForward).normalize()
 
         tanfov = math.tan(0.5*fov)
 
-        hor = vector3.mul(hor, 2.0 * farPlane * tanfov)
-        vertical = vector3.mul(vertical, 2.0 * farPlane * tanfov)
+        hor *= 2.0 * farPlane * tanfov
+        vertical *= 2.0 * farPlane * tanfov
 
-        hor*=vector3.mul(hor, w / float(h))
+        hor*=(self.w / float(self.h));
 
-        rayToCenter = rayFrom+rayForward
-        dHor = hor*1.0/float(w)
-        dVert = vertical*1.0/float(h)
+        rayToCenter = rayFrom + rayForward;
+        dHor = hor * (1.0/float(self.w));
+        dVert = vertical * (1.0/float(self.h));
 
-        rayTo = rayToCenter - 0.5 * vector3.mul(hor + 0.5 * vertical)
-        rayTo += float(x) * dHor
-        rayTo -= float(y) * dVert
-        return rayTo
+        rayTo = rayToCenter - hor * 0.5 + vertical * 0.5;
+        rayTo += dHor * float(x);
+        rayTo -= dVert * float(y);
+        return rayTo;
 
