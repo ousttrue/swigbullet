@@ -5,6 +5,7 @@ import numpy
 import swigbullet as bullet
 import bulletdemo.camera
 import bulletdemo.bulletworld
+import bulletdemo.bulletshooter
 from bulletdemo.vector3 import Vector3
 
 
@@ -26,6 +27,7 @@ class Controller(object):
         self.camera=bulletdemo.camera.Camera()
         # bullet
         self.world=bulletdemo.bulletworld.BulletWorld()
+        self.shooter=bulletdemo.bulletshooter.BulletShooter()
         self.createGround()
         self.createCubes()
         self.m_clock=bullet.btClock()
@@ -113,6 +115,10 @@ class Controller(object):
         self.m_mouseOldX = x;
         self.m_mouseOldY = y;
 
+        camPos=self.camera.m_view.position
+        target=self.camera.m_view.getRayTo(x, y)
+        self.shooter.shootBox(self.world, camPos, target)
+
         self.m_middleDown=True;
         return False;
 
@@ -149,8 +155,8 @@ class Controller(object):
             dx = x - self.m_mouseOldX;
             dy = y - self.m_mouseOldY;
             # only if ALT key is pressed (Maya style)
-            if(self.m_middleDown):
-                self.camera.move(dx, dy);
+            #if(self.m_middleDown):
+            #    self.camera.move(dx, dy);
             if(self.m_leftDown):
                 self.camera.rot(dx, dy);
             if(self.m_rightDown):
