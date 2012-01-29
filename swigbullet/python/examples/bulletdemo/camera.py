@@ -69,9 +69,7 @@ class Camera(object):
 
     def rot(self, dx, dy):
         self.m_azi += dx * 0.2
-        self.m_azi = math.fmod(self.m_azi, 360.0)
         self.m_ele += dy * 0.2
-        self.m_ele = math.fmod(self.m_ele, 180.0)
         self.update()
 
     def dolly(self, dy):
@@ -86,14 +84,16 @@ class Camera(object):
 
     def update(self):
         # clamp
-        while (self.m_azi < 0):
-            self.m_azi += 360
-        while (self.m_azi > 360):
-            self.m_azi -= 360
-        while (self.m_ele < 0):
-            self.m_ele += 360
-        while (self.m_ele > 360):
-            self.m_ele -= 360
+        while (self.m_azi < -180.0):
+            self.m_azi+= 360.0
+        while (self.m_azi > 180.0):
+            self.m_azi-= 360.0
+
+        if (self.m_ele < -89.0):
+            self.m_ele = -89.0
+        if (self.m_ele > 89.0):
+            self.m_ele = 89.0
+
         if (self.m_cameraDistance < 0.1):
             self.m_cameraDistance = 0.1
 
