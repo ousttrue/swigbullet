@@ -94,6 +94,6 @@ The utility which draws the bullet world by OpenGL.
     $ /c/Python27/python setup.py install
     
     # examples
-    $ /c/Python27/examples/HelloWorld.py
-    $ /c/Python27/examples/Demo.py
+    $ /c/Python27/python examples/HelloWorld.py
+    $ /c/Python27/python examples/Demo.py
 
