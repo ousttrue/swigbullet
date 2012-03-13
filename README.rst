@@ -97,5 +97,5 @@ The utility which draws the bullet world by OpenGL.
     $ /c/Python27/python examples/HelloWorld.py
     $ /c/Python27/python examples/BasicDemo.py
 
-BasicDemo requries pyOpenGL and glglue.
+BasicDemo requries pyOpenGL and glglue(0.3.0 or later).
 
